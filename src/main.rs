@@ -1,9 +1,13 @@
 use bevy::{ prelude::*, sprite::MaterialMesh2dBundle };
 
 mod camera_rig;
+mod components;
+
+pub mod prelude {
+    pub use crate::components::prelude::*;
+}
 
 fn main() {
-
     let mut app = App::new();
 
     // external plugins
