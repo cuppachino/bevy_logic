@@ -2,6 +2,7 @@ use bevy::{ prelude::*, sprite::MaterialMesh2dBundle };
 
 mod camera_rig;
 mod components;
+mod logic;
 
 pub mod prelude {
     pub use crate::components::prelude::*;
