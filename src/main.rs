@@ -2,6 +2,7 @@ use bevy::{ prelude::*, sprite::MaterialMesh2dBundle };
 
 mod camera_rig;
 mod components;
+mod cursor;
 
 pub mod prelude {
     pub use crate::components::prelude::*;
@@ -16,7 +17,7 @@ fn main() {
     );
 
     // crate plugins
-    app.add_plugins(camera_rig::CameraRigPlugin);
+    app.add_plugins((camera_rig::CameraRigPlugin, cursor::CursorPlugin));
 
     // main systems
     app.add_systems(Startup, setup);
@@ -31,10 +32,13 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>
 ) {
     // cuboid
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(Cuboid::default())),
-        material: materials.add(StandardMaterial::default()),
-        transform: Transform::from_rotation(Quat::from_rotation_y((15_f32).to_radians())),
-        ..Default::default()
-    });
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(Mesh::from(Cuboid::default())),
+            material: materials.add(StandardMaterial::default()),
+            transform: Transform::from_rotation(Quat::from_rotation_y((15_f32).to_radians())),
+            ..Default::default()
+        },
+        bevy_mod_picking::PickableBundle::default(),
+    ));
 }
