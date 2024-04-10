@@ -80,6 +80,7 @@ pub enum CameraAction {
 
 impl CameraAction {
     pub const ZOOM_SPEED: f32 = 10.0;
+    pub const ZOOM_FACTOR: f32 = 2.5;
 }
 
 pub type CameraActionState = ActionState<CameraAction>;
@@ -104,8 +105,9 @@ pub fn control_camera_rig(
             let clamped_value = action_state.clamped_value(&CameraAction::Zoom);
             if let Ok(mut joint_transform) = query_joint.get_mut(rig.joint_entity) {
                 joint_transform.translation.z += clamped_value
-                    * (CameraAction::ZOOM_SPEED + (joint_transform.translation.z * 2.5).max(1.0))
-                        .min(250.0)
+                    * (CameraAction::ZOOM_SPEED
+                        + (joint_transform.translation.z * CameraAction::ZOOM_FACTOR).max(1.0))
+                    .min(250.0)
                     * time.delta_seconds();
             }
         }
