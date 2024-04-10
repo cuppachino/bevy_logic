@@ -14,6 +14,7 @@ bevy = { version = "0.13.2", features = [
     # Create an empty "assets" folder if this prevents the game from running.
     "file_watcher",
 ] }
+bevy-trait-query = "0.5.1"
 bevy_mod_picking = "0.18.2"
 derive-new = "0.6.0"
 derive_more = "0.99.17"
