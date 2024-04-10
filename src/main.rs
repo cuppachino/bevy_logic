@@ -1,4 +1,4 @@
-use bevy::{ prelude::*, sprite::MaterialMesh2dBundle };
+use bevy::prelude::*;
 
 mod camera_rig;
 mod components;

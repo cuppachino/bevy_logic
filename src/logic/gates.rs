@@ -1,5 +1,10 @@
 use bevy::prelude::*;
-use super::Signal;
+use super::signal::Signal;
+
+#[allow(unused_imports)]
+pub mod prelude {
+    pub use super::{ LogicGatePlugin, NotGate, AndGate, OrGate };
+}
 
 /// A trait that defines the behavior of a logic gate.
 #[bevy_trait_query::queryable]
@@ -8,6 +13,7 @@ pub trait LogicGate {
     fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]);
 }
 
+/// A plugin that registers logic gates and simulates their behavior.
 pub struct LogicGatePlugin;
 
 impl Plugin for LogicGatePlugin {
