@@ -8,9 +8,16 @@ pub enum Signal {
     Undefined,
 }
 
+impl Default for Signal {
+    fn default() -> Self {
+        Signal::Undefined
+    }
+}
+
 impl Signal {
     pub const OFF: Signal = Signal::Digital(false);
     pub const ON: Signal = Signal::Digital(true);
+    pub const NEG: Signal = Signal::Analog(-1.0);
 
     /// Returns true if the signal is true or greater or equal to 1.0.
     pub fn is_true(&self) -> bool {
