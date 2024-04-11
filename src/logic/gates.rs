@@ -22,8 +22,9 @@ impl Plugin for LogicGatePlugin {
         // If we don't register them, they will be invisible to the game engine.
         use bevy_trait_query::RegisterExt;
 
-        app.register_component_as::<dyn LogicGate, NotGate>()
+        app.register_component_as::<dyn LogicGate, Battery>()
             .register_component_as::<dyn LogicGate, AndGate>()
+            .register_component_as::<dyn LogicGate, NotGate>()
             .register_component_as::<dyn LogicGate, OrGate>();
     }
 }
@@ -68,6 +69,36 @@ impl LogicGate for OrGate {
         };
         outputs.iter_mut().for_each(|output| {
             *output = signal;
+        });
+    }
+}
+
+/// A battery that emits a constant signal.
+#[derive(Component, Clone, Copy, Debug)]
+pub struct Battery {
+    pub signal: Signal,
+}
+
+impl Default for Battery {
+    fn default() -> Self {
+        Self::MAX
+    }
+}
+
+impl Battery {
+    pub const OFF: Battery = Battery::new(Signal::OFF);
+    pub const MAX: Battery = Battery::new(Signal::ON);
+    pub const MIN: Battery = Battery::new(Signal::NEG);
+
+    pub const fn new(signal: Signal) -> Self {
+        Self { signal }
+    }
+}
+
+impl LogicGate for Battery {
+    fn evaluate(&self, _: &[Signal], outputs: &mut [Signal]) {
+        outputs.iter_mut().for_each(|output| {
+            *output = self.signal;
         });
     }
 }
