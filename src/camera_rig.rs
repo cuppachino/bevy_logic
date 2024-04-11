@@ -1,5 +1,5 @@
-use bevy::{ecs::system::EntityCommands, prelude::*, render::primitives::Frustum};
-use leafwing_input_manager::{action_state, prelude::*};
+use bevy::prelude::*;
+use leafwing_input_manager::prelude::*;
 
 /// Marks the root entity in a camera rig hierarchy.
 #[derive(Component, Debug, Reflect)]
@@ -29,20 +29,22 @@ pub fn spawn_camera_rig(mut commands: Commands) {
     let mut joint_entity: Entity = Entity::PLACEHOLDER;
     commands
         .spawn((
-            InputManagerBundle::with_map(InputMap::new([
-                (CameraAction::Move, UserInput::from(VirtualDPad::wasd())),
-                (
-                    CameraAction::Zoom,
-                    UserInput::from(VirtualAxis::vertical_arrow_keys().inverted()),
-                ),
-                (
-                    CameraAction::Zoom,
-                    UserInput::from(VirtualAxis {
-                        positive: InputKind::MouseWheel(MouseWheelDirection::Up),
-                        negative: InputKind::MouseWheel(MouseWheelDirection::Down),
-                    }),
-                ),
-            ])),
+            InputManagerBundle::with_map(
+                InputMap::new([
+                    (CameraAction::Move, UserInput::from(VirtualDPad::wasd())),
+                    (
+                        CameraAction::Zoom,
+                        UserInput::from(VirtualAxis::vertical_arrow_keys().inverted()),
+                    ),
+                    (
+                        CameraAction::Zoom,
+                        UserInput::from(VirtualAxis {
+                            positive: InputKind::MouseWheel(MouseWheelDirection::Up),
+                            negative: InputKind::MouseWheel(MouseWheelDirection::Down),
+                        }),
+                    ),
+                ])
+            ),
             SpatialBundle::default(),
         ))
         .with_children(|rig| {
@@ -88,13 +90,12 @@ pub type CameraActionState = ActionState<CameraAction>;
 pub fn control_camera_rig(
     mut query_rig: Query<(&CameraActionState, &CameraRig, &mut Transform)>,
     mut query_joint: Query<&mut Transform, (With<CameraJoint>, Without<CameraRig>)>,
-    time: Res<Time>,
+    time: Res<Time>
 ) {
     for (action_state, rig, mut transform) in query_rig.iter_mut() {
         // translation applied to the root entity
         if action_state.pressed(&CameraAction::Move) {
             if let Some(clamped_axis) = action_state.clamped_axis_pair(&CameraAction::Move) {
-                println!("clamped_axis: {:?}", clamped_axis);
                 let translation = Vec3::new(clamped_axis.x(), clamped_axis.y(), 0.0);
                 transform.translation += translation * time.delta_seconds();
             }
@@ -104,11 +105,13 @@ pub fn control_camera_rig(
         if action_state.pressed(&CameraAction::Zoom) {
             let clamped_value = action_state.clamped_value(&CameraAction::Zoom);
             if let Ok(mut joint_transform) = query_joint.get_mut(rig.joint_entity) {
-                joint_transform.translation.z += clamped_value
-                    * (CameraAction::ZOOM_SPEED
-                        + (joint_transform.translation.z * CameraAction::ZOOM_FACTOR).max(1.0))
-                    .min(250.0)
-                    * time.delta_seconds();
+                joint_transform.translation.z +=
+                    clamped_value *
+                    (
+                        CameraAction::ZOOM_SPEED +
+                        (joint_transform.translation.z * CameraAction::ZOOM_FACTOR).max(1.0)
+                    ).min(250.0) *
+                    time.delta_seconds();
             }
         }
     }
