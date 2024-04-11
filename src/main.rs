@@ -18,10 +18,14 @@ fn main() {
     );
 
     // crate plugins
-    app.add_plugins((camera_rig::CameraRigPlugin, cursor::CursorPlugin));
+    app.add_plugins((
+        camera_rig::CameraRigPlugin,
+        cursor::CursorPlugin,
+        logic::prelude::LogicGatePlugin,
+    ));
 
     // main systems
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, (setup, example));
 
     // run
     app.run();
@@ -42,4 +46,37 @@ fn setup(
         },
         bevy_mod_picking::PickableBundle::default(),
     ));
+}
+
+use logic_tools::{ SpawnDemoLights, gate_mesh };
+use self::logic::prelude::*;
+
+pub fn example(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>
+) {
+    commands.spawn_demo_lights();
+
+    let mut battery = commands.battery(true);
+    battery.insert(PbrBundle {
+        mesh: meshes.add(gate_mesh(0, 1)),
+        transform: Transform::from_xyz(-2.0, 0.0, 2.0),
+        material: materials.add(StandardMaterial::from(Color::WHITE)),
+        ..default()
+    });
+    let battery = battery.downgrade();
+
+    let mut not_gate = commands.not_gate();
+    not_gate.insert((
+        PbrBundle {
+            mesh: meshes.add(gate_mesh(1, 1)),
+            transform: Transform::from_xyz(0.0, 0.0, 2.0),
+            material: materials.add(StandardMaterial::from(Color::YELLOW)),
+            ..default()
+        },
+    ));
+    let not_gate = not_gate.downgrade();
+
+    commands.wire(battery.source(0).unwrap(), not_gate.sink(0).unwrap());
 }
