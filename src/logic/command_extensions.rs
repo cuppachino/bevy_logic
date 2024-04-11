@@ -28,23 +28,31 @@ pub trait WireExt<'w, 's> {
 
 impl<'w, 's, 'a> WireExt<'w, 's> for Commands<'w, 's> {
     fn wire(&mut self, source: Entity, sink: Entity) -> &mut Self {
-        self.spawn(Wire { source, sink });
+        self.spawn(Wire::new(source, sink));
         self
     }
 }
 
 /// A trait for spawning common logic gates.
 pub trait LogicGateExt<'w, 's> {
+    fn node(&mut self) -> LogicEntityCommands;
     fn not_gate(&mut self) -> LogicEntityCommands;
     fn and_gate(&mut self) -> LogicEntityCommands;
     fn or_gate(&mut self, is_adder: bool) -> LogicEntityCommands;
 }
 
 impl<'w, 's, 'a> LogicGateExt<'w, 's> for Commands<'w, 's> {
+    fn node(&mut self) -> LogicEntityCommands {
+        let entity_commands = self.spawn(LogicNode);
+        let mut logic_commands = LogicEntityCommands::new(entity_commands);
+        logic_commands.with_sources(1).with_sinks(1);
+        logic_commands
+    }
+
     fn and_gate(&mut self) -> LogicEntityCommands {
         let entity_commands = self.spawn(AndGate);
         let mut logic_commands = LogicEntityCommands::new(entity_commands);
-        logic_commands.with_sources(2).with_sinks(1);
+        logic_commands.with_sources(1).with_sinks(2);
         logic_commands
     }
 
@@ -58,7 +66,7 @@ impl<'w, 's, 'a> LogicGateExt<'w, 's> for Commands<'w, 's> {
     fn or_gate(&mut self, is_adder: bool) -> LogicEntityCommands {
         let entity_commands = self.spawn(OrGate { is_adder });
         let mut logic_commands = LogicEntityCommands::new(entity_commands);
-        logic_commands.with_sources(2).with_sinks(1);
+        logic_commands.with_sources(1).with_sinks(2);
         logic_commands
     }
 }

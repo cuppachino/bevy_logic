@@ -81,7 +81,7 @@ impl SpawnSourcesAndSinks for LogicEntityCommands<'_> {
     fn with_sources(&mut self, count: usize) -> &mut Self {
         self.entity_commands.with_children(|entity| {
             for _ in 0..count {
-                let source = entity.spawn(Source::default()).id();
+                let source = entity.spawn((Source::default(), SpatialBundle::default())).id();
                 self.sources.push(source);
             }
         });
@@ -91,7 +91,7 @@ impl SpawnSourcesAndSinks for LogicEntityCommands<'_> {
     fn with_sinks(&mut self, count: usize) -> &mut Self {
         self.entity_commands.with_children(|entity| {
             for _ in 0..count {
-                let sink = entity.spawn(Sink::default()).id();
+                let sink = entity.spawn((Sink::default(), SpatialBundle::default())).id();
                 self.sinks.push(sink);
             }
         });

@@ -14,6 +14,8 @@ pub mod command_extensions;
 pub mod signal;
 pub mod gates;
 pub mod components {
+    use derive_new::new;
+
     use super::{ *, signal::Signal };
 
     /// An output node.
@@ -29,27 +31,11 @@ pub mod components {
     }
 
     /// A connection between two nodes.
-    #[derive(Component, Clone, Copy, Debug)]
+    #[derive(new, Component, Clone, Copy, Debug)]
     pub struct Wire {
         pub source: Entity,
         pub sink: Entity,
-    }
-}
-
-fn debug_logic_components(
-    mut gizmos: Gizmos,
-    query_gates: Query<(&dyn gates::LogicGate, &Children)>,
-    query_sources: Query<&components::Source>,
-    query_sinks: Query<&components::Sink>,
-    query_wires: Query<&components::Wire>
-) {
-    for (gate, children) in query_gates.iter() {
-        let sources = children.iter().filter_map(|entity| query_sources.get(*entity).ok());
-        let sinks = children.iter().filter_map(|entity| query_sinks.get(*entity).ok());
-        let wires = children.iter().filter_map(|entity| query_wires.get(*entity).ok());
-
-        // todo: spatial bundles on gates
-
-        // gizmos.circle(position, normal, radius, color)
+        #[new(default)]
+        pub signal: Signal,
     }
 }
