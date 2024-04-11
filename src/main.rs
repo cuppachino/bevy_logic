@@ -4,6 +4,7 @@ mod camera_rig;
 mod components;
 mod cursor;
 mod logic;
+mod materials;
 
 pub mod prelude {
     pub use crate::components::prelude::*;
@@ -22,6 +23,7 @@ fn main() {
         camera_rig::CameraRigPlugin,
         cursor::CursorPlugin,
         logic::prelude::LogicGatePlugin,
+        materials::MaterialsPlugin,
     ));
 
     // main systems
