@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 use bevy_trait_query::One;
+use derive_new::new;
+use crate::Desync;
+
 use super::signal::Signal;
 
 #[allow(unused_imports)]
@@ -14,14 +17,15 @@ pub trait LogicGate {
     fn evaluate(&self, inputs: &[Signal], outputs: &mut [Source]);
 }
 
-/// A plugin that registers logic gates and simulates their behavior.
-pub struct LogicGatePlugin;
-
 #[derive(SystemSet, Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum LogicSystemSet {
+    SpawnEntities,
     PropagateSignals,
     EvaluateGates,
 }
+
+/// A plugin that registers logic gates and simulates their behavior.
+pub struct LogicGatePlugin;
 
 impl Plugin for LogicGatePlugin {
     fn build(&self, app: &mut App) {
@@ -38,9 +42,9 @@ impl Plugin for LogicGatePlugin {
         app.configure_sets(
             Update,
             (
+                LogicSystemSet::SpawnEntities,
                 LogicSystemSet::PropagateSignals,
                 LogicSystemSet::EvaluateGates,
-                // LogicSystemSet::EmitSignals,
             ).chain()
         );
 
@@ -52,17 +56,27 @@ impl Plugin for LogicGatePlugin {
                 .after(LogicSystemSet::PropagateSignals)
         );
         app.add_systems(Update, debug_logic_components.after(LogicSystemSet::EvaluateGates));
+
+        // // Set the Fixed Timestep interval to 96 Hz
+        // app.insert_resource(Time::<Fixed>::from_seconds(0.5));
     }
 }
 
 use super::components::{ Source, Sink, Wire };
 
 fn propagate_logic_signals(
-    mut query_wires: Query<&mut Wire>,
+    mut query_wires: Query<(&mut Wire, Option<&mut Desync>)>,
     query_sources: Query<&Source>,
     mut query_sinks: Query<&mut Sink>
 ) {
-    for mut wire in query_wires.iter_mut() {
+    for (mut wire, desync) in query_wires.iter_mut() {
+        if let Some(mut desync) = desync {
+            if desync.0 > 0 {
+                desync.0 -= 1;
+                continue;
+            }
+        }
+
         let source = query_sources.get(wire.source).unwrap();
         let mut sink = query_sinks.get_mut(wire.sink).unwrap();
         sink.signal = source.signal;
@@ -71,11 +85,18 @@ fn propagate_logic_signals(
 }
 
 fn evaluate_logic_gates(
-    query_gates: Query<(One<&dyn LogicGate>, &Children)>,
+    mut query_gates: Query<(One<&dyn LogicGate>, &Children, Option<&mut Desync>)>,
     query_sinks: Query<&Sink>,
     mut query_sources: Query<(Entity, &mut Source)>
 ) {
-    for (gate, children) in query_gates.iter() {
+    for (gate, children, desync) in query_gates.iter_mut() {
+        if let Some(mut desync) = desync {
+            if desync.0 > 0 {
+                desync.0 -= 1;
+                continue;
+            }
+        }
+
         let mut inputs = Vec::new();
         let mut output_entities = Vec::new();
 
@@ -111,7 +132,6 @@ fn evaluate_logic_gates(
 
 fn debug_logic_components(
     mut gizmos: Gizmos,
-    query_gates: Query<(&dyn LogicGate, &Children)>,
     query_sources: Query<(&Source, &GlobalTransform)>,
     query_sinks: Query<(&Sink, &GlobalTransform)>,
     query_wires: Query<&Wire>
@@ -126,16 +146,6 @@ fn debug_logic_components(
             if source.0.signal.is_true() { Color::GREEN } else { Color::RED }
         });
     }
-
-    // for (gate, children) in query_gates.iter() {
-    //     let sources = children.iter().filter_map(|entity| query_sources.get(*entity).ok());
-    //     let sinks = children.iter().filter_map(|entity| query_sinks.get(*entity).ok());
-    //     let wires = children.iter().filter_map(|entity| query_wires.get(*entity).ok());
-
-    //     // todo: spatial bundles on gates
-
-    //     // gizmos.circle(position, normal, radius, color)
-    // }
 }
 
 #[derive(Component, Clone, Copy, Debug)]
@@ -167,6 +177,22 @@ pub struct OrGate {
     /// If true, the gate will act as an analog adder,
     /// computing the sum of all inputs.
     pub is_adder: bool,
+
+    /// If true, the gate will be a NOR gate instead of an OR gate.
+    pub invert_output: bool,
+}
+
+impl Default for OrGate {
+    fn default() -> Self {
+        Self {
+            is_adder: false,
+            invert_output: false,
+        }
+    }
+}
+
+impl OrGate {
+    pub const NOR: OrGate = OrGate { is_adder: false, invert_output: true };
 }
 
 impl LogicGate for OrGate {
@@ -176,6 +202,9 @@ impl LogicGate for OrGate {
         } else {
             inputs.iter().any(Signal::is_true).into()
         };
+
+        let signal = if self.invert_output { !signal } else { signal };
+
         outputs.iter_mut().for_each(|output| {
             output.signal = signal;
         });
@@ -194,11 +223,13 @@ impl Default for Battery {
     }
 }
 
+#[allow(dead_code)]
 impl Battery {
     pub const OFF: Battery = Battery::new(Signal::OFF);
     pub const MAX: Battery = Battery::new(Signal::ON);
     pub const MIN: Battery = Battery::new(Signal::NEG);
 
+    /// Create a new battery with `signal`.
     pub const fn new(signal: Signal) -> Self {
         Self { signal }
     }

@@ -55,3 +55,15 @@ impl std::ops::Add<f32> for Signal {
         }
     }
 }
+
+impl std::ops::Not for Signal {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Signal::Analog(value) => Signal::Analog(-value),
+            Signal::Digital(value) => Signal::Digital(!value),
+            Signal::Undefined => Signal::Undefined,
+        }
+    }
+}
