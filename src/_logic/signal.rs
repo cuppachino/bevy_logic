@@ -1,8 +1,7 @@
-use bevy::prelude::*;
 use derive_more::{ From, Display };
 
 /// State storage for logic simulation.
-#[derive(Component, Clone, Copy, Debug, Display, PartialEq, PartialOrd, From, Reflect)]
+#[derive(Clone, Copy, Debug, Display, PartialEq, PartialOrd, From, Reflect)]
 pub enum Signal {
     Analog(f32),
     Digital(bool),

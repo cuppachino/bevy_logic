@@ -1,44 +1,36 @@
 use bevy::prelude::*;
 
-pub trait SpawnDemoLights {
-    fn spawn_demo_lights(&mut self);
+pub mod logic;
+pub mod systems;
+pub mod components;
+pub mod resources;
+pub mod commands;
+
+pub mod prelude {
+    pub use crate::logic::prelude::*;
+    pub use crate::systems::prelude::*;
+    pub use crate::components::prelude::*;
+    pub use crate::resources::prelude::*;
+
+    pub use super::LogicSimulationPlugin;
 }
 
-impl<'w, 's> SpawnDemoLights for Commands<'w, 's> {
-    fn spawn_demo_lights(&mut self) {
-        self.spawn(PointLightBundle {
-            point_light: PointLight {
-                shadows_enabled: true,
-                ..default()
-            },
-            transform: Transform::from_xyz(4.0, 8.0, 4.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..default()
-        });
+/// A plugin group containing all logic simulation systems.
+#[derive(Default)]
+pub struct LogicSimulationPlugin;
 
-        self.spawn(DirectionalLightBundle {
-            directional_light: DirectionalLight {
-                shadows_enabled: true,
-                illuminance: 10_752.7,
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(0.0, 2.0, 0.0),
-                rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
-                ..default()
-            },
-            ..default()
-        });
+impl Plugin for LogicSimulationPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<logic::signal::Signal>()
+            .register_type::<components::LogicFans>()
+            .register_type::<components::Wire>()
+            .register_type::<components::GateFan>()
+            .register_type::<components::AndGate>()
+            .register_type::<components::OrGate>();
+
+        app.add_plugins(components::LogicGateTraitQueryPlugin)
+            .init_resource::<resources::LogicGraph>()
+            .add_systems(FixedUpdate, systems::step_logic)
+            .insert_resource(Time::<Fixed>::from_seconds(0.5));
     }
-}
-
-/// Creates a rounded rectangle mesh. The rectangle is centered at the origin.
-pub fn gate_mesh(input_count: usize, output_count: usize) -> Mesh {
-    const GATE_SIZE: f32 = 1.0;
-    const GATE_THICKNESS: f32 = 0.25;
-
-    let gate_height = GATE_SIZE * ((input_count.max(output_count) / 2).max(1) as f32);
-
-    #[allow(deprecated)]
-    let mesh = Mesh::from(shape::Box::new(GATE_SIZE, gate_height, GATE_THICKNESS));
-    mesh
 }
