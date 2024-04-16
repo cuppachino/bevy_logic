@@ -1,15 +1,6 @@
-use bevy::{
-    prelude::*,
-    utils::petgraph::{
-        algo::kosaraju_scc,
-        graphmap::DiGraphMap,
-        visit::DfsPostOrder,
-        Directed,
-        Graph,
-    },
-};
+use bevy::{ prelude::*, utils::petgraph::{ algo::kosaraju_scc, graphmap::DiGraphMap } };
 
-use crate::{ commands::{ GateData, WireData }, components::Wire, prelude::LogicFans };
+use crate::commands::{ GateData, WireData };
 
 pub mod prelude {
     pub use super::LogicGraph;

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_trait_query::One;
 use crate::{
-    components::{ GateFan, GateInput, GateOutput, Wire },
+    components::{ GateFan, Wire },
     logic::{ signal::Signal, LogicGate },
     prelude::LogicFans,
     resources::LogicGraph,
@@ -12,8 +12,6 @@ pub mod prelude {}
 pub fn step_logic(
     logic_graph: Res<LogicGraph>,
     logic_entities: Query<(&LogicFans, One<&dyn LogicGate>)>,
-    // mut inputs: Query<&mut Signal, (With<GateInput>, Without<GateOutput>)>,
-    // mut outputs: Query<&mut Signal, (With<GateOutput>, Without<GateInput>)>,
     mut gate_fans: Query<&mut Signal, With<GateFan>>,
     mut wires: Query<(&mut Signal, &Wire), Without<GateFan>>
 ) {
@@ -65,10 +63,4 @@ pub fn step_logic(
             }
         }
     }
-
-    // // Print the output signals.
-    // println!("----");
-    // for signal in gate_fans.iter() {
-    //     println!("Output: {:?}", signal);
-    // }
 }

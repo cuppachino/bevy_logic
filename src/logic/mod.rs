@@ -1,5 +1,3 @@
-use bevy::prelude::*;
-
 pub mod signal;
 
 pub mod prelude {

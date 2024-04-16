@@ -154,7 +154,6 @@ impl LogicGate for AndGate {
         let signal = inputs.iter().all(Signal::is_true);
         outputs.iter_mut().for_each(|output_signal| {
             *output_signal = signal.into();
-            // println!("AndGate signal: {:?}", signal);
         });
     }
 }
@@ -167,7 +166,6 @@ impl LogicGate for NotGate {
         let signal = !inputs.iter().all(Signal::is_true);
         outputs.iter_mut().for_each(|output_signal| {
             *output_signal = signal.into();
-            // println!("NotGate signal: {:?}", signal);
         });
     }
 }
@@ -228,7 +226,6 @@ impl LogicGate for Battery {
     fn evaluate(&self, _: &[Signal], outputs: &mut [Signal]) {
         outputs.iter_mut().for_each(|output_signal| {
             *output_signal = self.signal;
-            // println!("Battery signal: {:?}", self.signal);
         });
     }
 }
@@ -241,14 +238,10 @@ impl Plugin for LogicGateTraitQueryPlugin {
         // If we don't register them, they will be invisible to the game engine.
         use bevy_trait_query::RegisterExt;
 
+        app.register_component_as::<dyn LogicGate, Battery>();
+
         app.register_component_as::<dyn LogicGate, AndGate>()
             .register_component_as::<dyn LogicGate, NotGate>()
             .register_component_as::<dyn LogicGate, OrGate>();
-
-        app.register_component_as::<dyn LogicGate, Battery>();
-
-        // .register_component_as::<dyn LogicGate, AndGate>()
-        // .register_component_as::<dyn LogicGate, LogicNode>();
-        // .register_component_as::<dyn LogicGate, Battery>()
     }
 }

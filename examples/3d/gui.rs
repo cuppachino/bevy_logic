@@ -1,4 +1,4 @@
-use bevy::{ asset::LoadedAsset, prelude::*, utils::HashMap };
+use bevy::{ prelude::*, utils::HashMap };
 
 pub struct GuiPlugin;
 

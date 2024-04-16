@@ -3,20 +3,11 @@ mod gui;
 mod camera_rig;
 
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy::{
-    prelude::*,
-    utils::petgraph::{
-        algo::{ self, kosaraju_scc, toposort, Cycle },
-        visit::DfsPostOrder,
-        Directed,
-        Graph,
-    },
-};
+use bevy::prelude::*;
 use bevy_logic::{
     commands::LogicExt,
-    components::{ AndGate, Battery, InputBundle, LogicFans, NotGate, OrGate, Wire },
+    components::{ AndGate, Battery, LogicFans, NotGate, OrGate },
     prelude::*,
-    resources::LogicGraphData,
 };
 use camera_rig::CameraRigPlugin;
 use gui::{ GateIcon, GuiPlugin, LogicGateIcons };

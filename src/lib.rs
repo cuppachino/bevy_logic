@@ -6,6 +6,7 @@ pub mod components;
 pub mod resources;
 pub mod commands;
 
+#[allow(unused_imports)]
 pub mod prelude {
     pub use crate::logic::prelude::*;
     pub use crate::systems::prelude::*;
