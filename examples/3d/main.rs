@@ -25,28 +25,7 @@ fn main() {
         .run();
 }
 
-fn gate_fan(kind: GateFan, len: usize, height: f32) -> impl GateFanWorldMut {
-    #[cfg(debug_assertions)]
-    if len == 0 {
-        panic!("GatePipe must have at least one input");
-    }
-    let x: f32 =
-        (match kind {
-            GateFan::Input => -1.0,
-            GateFan::Output => 1.0,
-        }) * 0.5;
-    let section_height: f32 = height / ((len + 1) as f32);
-    let half_height = height / 2.0;
-    move |cmd: &mut EntityWorldMut, index: usize| {
-        let position = Vec3::new(
-            x,
-            -1.0 * (section_height * ((1 + index) as f32) - half_height),
-            0.0
-        );
-        cmd.insert(Transform::from_translation(position));
-    }
-}
-
+///
 fn setup(world: &mut World) {
     let battery_bundle = pbr_bundle(world, GateIcon::Battery, Vec2::new(-4.0, 0.0));
     let or_bundle = pbr_bundle(world, GateIcon::Or, Vec2::new(-2.0, 0.0));
@@ -139,6 +118,33 @@ fn setup(world: &mut World) {
         .add_data(battery)
         .add_data(wires)
         .compile();
+}
+
+/// Returns a function that inserts a `Transform` component into the [`GateFan`] entity.
+///
+/// The `kind` parameter determines the side of the gate the fan is on.
+/// The `len` parameter describes the total number of fans on the side.
+/// The `height` parameter is used to distribute the fans vertically.
+fn gate_fan(kind: GateFan, len: usize, height: f32) -> impl GateFanWorldMut {
+    #[cfg(debug_assertions)]
+    if len == 0 {
+        panic!("Fan length must be greater than 0.");
+    }
+    let x: f32 =
+        (match kind {
+            GateFan::Input => -1.0,
+            GateFan::Output => 1.0,
+        }) * 0.5;
+    let section_height: f32 = height / ((len + 1) as f32);
+    let half_height = height / 2.0;
+    move |cmd: &mut EntityWorldMut, index: usize| {
+        let position = Vec3::new(
+            x,
+            -1.0 * (section_height * ((1 + index) as f32) - half_height),
+            0.0
+        );
+        cmd.insert(Transform::from_translation(position));
+    }
 }
 
 fn pbr_bundle(
