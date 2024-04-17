@@ -30,16 +30,3 @@ impl<'w, 's> SpawnDemoLights for Commands<'w, 's> {
         });
     }
 }
-
-/// todo
-/// Creates a rounded rectangle mesh. The rectangle is centered at the origin.
-pub fn gate_mesh(input_count: usize, output_count: usize) -> Mesh {
-    const GATE_SIZE: f32 = 1.0;
-    const GATE_THICKNESS: f32 = 0.25;
-
-    let gate_height = GATE_SIZE * ((input_count.max(output_count) / 2).max(1) as f32);
-
-    #[allow(deprecated)]
-    let mesh = Mesh::from(shape::Box::new(GATE_SIZE, gate_height, GATE_THICKNESS));
-    mesh
-}

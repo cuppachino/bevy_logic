@@ -37,7 +37,7 @@ pub fn spawn_camera_rig(mut commands: Commands) {
                         UserInput::from(VirtualAxis::vertical_arrow_keys().inverted()),
                     ),
                     (
-                        CameraAction::Zoom,
+                        CameraAction::ZoomQuantized,
                         UserInput::from(VirtualAxis {
                             positive: InputKind::MouseWheel(MouseWheelDirection::Up),
                             negative: InputKind::MouseWheel(MouseWheelDirection::Down),
@@ -78,11 +78,22 @@ pub fn spawn_camera_rig(mut commands: Commands) {
 pub enum CameraAction {
     Move,
     Zoom,
+    ZoomQuantized,
 }
 
 impl CameraAction {
-    pub const ZOOM_SPEED: f32 = 10.0;
-    pub const ZOOM_FACTOR: f32 = 2.5;
+    pub const ZOOM_SPEED: f32 = 20.0;
+    pub const ZOOM_MIN: f32 = 1.0;
+    pub const ZOOM_MAX: f32 = 100.0;
+    pub const ZOOM_LEN: f32 = Self::ZOOM_MAX - Self::ZOOM_MIN;
+
+    pub fn clamp_zoom(z: f32) -> f32 {
+        z.clamp(Self::ZOOM_MIN, Self::ZOOM_MAX)
+    }
+
+    pub fn current_zoom(z: f32) -> f32 {
+        (z - Self::ZOOM_MIN) / Self::ZOOM_LEN
+    }
 }
 
 pub type CameraActionState = ActionState<CameraAction>;
@@ -103,15 +114,21 @@ pub fn control_camera_rig(
 
         // zoom applied to the joint entity
         if action_state.pressed(&CameraAction::Zoom) {
-            let clamped_value = action_state.clamped_value(&CameraAction::Zoom);
+            let clamped_value = action_state.value(&CameraAction::Zoom);
             if let Ok(mut joint_transform) = query_joint.get_mut(rig.joint_entity) {
-                joint_transform.translation.z +=
-                    clamped_value *
-                    (
-                        CameraAction::ZOOM_SPEED +
-                        (joint_transform.translation.z * CameraAction::ZOOM_FACTOR).max(1.0)
-                    ).min(250.0) *
-                    time.delta_seconds();
+                let z = joint_transform.translation.z;
+                let current_zoom = CameraAction::current_zoom(z);
+
+                let speed =
+                    CameraAction::ZOOM_SPEED + CameraAction::ZOOM_SPEED * (current_zoom * 8.0);
+                let zoom = clamped_value * speed * time.delta_seconds();
+
+                {
+                    joint_transform.translation.z += zoom;
+                    joint_transform.translation.z = CameraAction::clamp_zoom(
+                        joint_transform.translation.z
+                    );
+                }
             }
         }
     }

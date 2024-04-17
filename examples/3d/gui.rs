@@ -1,12 +1,14 @@
-use bevy::{ gizmos, prelude::*, utils::HashMap };
+use bevy::{ prelude::*, utils::HashMap };
 use bevy_logic::{ components::{ GateFan, GateOutput, LogicFans, Wire }, logic::signal::Signal };
 
 pub struct GuiPlugin;
 
 impl Plugin for GuiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PreStartup, init_logic_gate_icons)
-        .add_systems(Update, (colorize_logic_gates, gizmo_wires));
+        app.add_systems(PreStartup, init_logic_gate_icons).add_systems(Update, (
+            colorize_logic_gates,
+            gizmo_wires,
+        ));
     }
 }
 
