@@ -1,10 +1,14 @@
-use bevy::{ prelude::*, utils::HashMap };
+use bevy::{ gizmos, prelude::*, utils::HashMap };
+use bevy_logic::{ components::{ GateFan, GateOutput, LogicFans, Wire }, logic::signal::Signal };
 
 pub struct GuiPlugin;
 
 impl Plugin for GuiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PreStartup, init_logic_gate_icons);
+        app.add_systems(PreStartup, init_logic_gate_icons).add_systems(Update, (
+            colorize_logic_gates,
+            gizmo_wires,
+        ));
     }
 }
 
@@ -20,6 +24,14 @@ impl LogicGateIcons {
     pub fn get(&self, icon: GateIcon) -> Handle<Image> {
         self.map.get(&icon).unwrap().clone()
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum GateIcon {
+    And,
+    Or,
+    Not,
+    Battery,
 }
 
 fn init_logic_gate_icons(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -40,10 +52,45 @@ fn init_logic_gate_icons(mut commands: Commands, asset_server: Res<AssetServer>)
     });
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum GateIcon {
-    And,
-    Or,
-    Not,
-    Battery,
+fn colorize_logic_gates(
+    query: Query<(&LogicFans, &Handle<StandardMaterial>)>,
+    query_outputs: Query<&Signal, With<GateOutput>>,
+    mut materials: ResMut<Assets<StandardMaterial>>
+) {
+    for (fans, material) in query.iter() {
+        // if any of the outputs are true, the gate is on.
+        let is_active = fans
+            .some_outputs()
+            .iter()
+            .any(|output| {
+                let signal = query_outputs.get(*output).unwrap();
+                signal.is_true()
+            });
+
+        let color = if is_active { Color::WHITE } else { Color::GRAY };
+
+        let material = materials.get_mut(material).unwrap();
+        material.base_color = color;
+    }
+}
+
+fn gizmo_wires(
+    mut gizmos: Gizmos,
+    query_wires: Query<(&Wire, &Signal)>,
+    query_fans: Query<&GlobalTransform, With<GateFan>>
+) {
+    for (wire, signal) in query_wires.iter() {
+        let Ok(from) = query_fans.get(wire.from).map(|t| t.translation()) else {
+            continue;
+        };
+        let Ok(to) = query_fans.get(wire.to).map(|t| t.translation()) else {
+            continue;
+        };
+
+        let color = if signal.is_true() { Color::GREEN } else { Color::BLACK };
+
+        gizmos.line(from, to, color);
+        gizmos.circle(from, Direction3d::Z, 0.1, color);
+        gizmos.circle(to, Direction3d::Z, 0.1, color);
+    }
 }
