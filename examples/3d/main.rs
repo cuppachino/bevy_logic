@@ -38,7 +38,11 @@ fn gate_fan(kind: GateFan, len: usize, height: f32) -> impl GateFanWorldMut {
     let section_height: f32 = height / ((len + 1) as f32);
     let half_height = height / 2.0;
     move |cmd: &mut EntityWorldMut, index: usize| {
-        let position = Vec3::new(x, section_height * ((1 + index) as f32) - half_height, 0.0);
+        let position = Vec3::new(
+            x,
+            -1.0 * (section_height * ((1 + index) as f32) - half_height),
+            0.0
+        );
         cmd.insert(Transform::from_translation(position));
     }
 }
@@ -50,10 +54,12 @@ fn setup(world: &mut World) {
     let and_bundle_b = pbr_bundle(world, GateIcon::And, Vec2::new(2.0, -2.0));
     let not_bundle_a = pbr_bundle(world, GateIcon::Not, Vec2::new(2.0, 0.0));
     let not_bundle_b = pbr_bundle(world, GateIcon::Not, Vec2::new(4.0, 0.0));
+    let not_bundle_c = pbr_bundle(world, GateIcon::Not, Vec2::new(6.0, 0.0));
+    let not_bundle_d = pbr_bundle(world, GateIcon::Not, Vec2::new(6.0, -2.0));
 
     let or_gate = world
         .spawn_gate((Name::new("OR"), OrGate::default()))
-        .build_inputs(2, gate_fan(GateFan::Input, 2, 1.0))
+        .build_inputs(3, gate_fan(GateFan::Input, 3, 1.0))
         .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
         .insert_bundle(or_bundle)
         .build();
@@ -82,6 +88,19 @@ fn setup(world: &mut World) {
         .insert_bundle(and_bundle_b)
         .build();
 
+    let not_gate_c = world
+        .spawn_gate((Name::new("NOT"), NotGate))
+        .insert_bundle(not_bundle_c)
+        .build_inputs(1, gate_fan(GateFan::Input, 1, 1.0))
+        .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
+        .build();
+    let not_gate_d = world
+        .spawn_gate((Name::new("NOT"), NotGate))
+        .insert_bundle(not_bundle_d)
+        .build_inputs(1, gate_fan(GateFan::Input, 1, 1.0))
+        .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
+        .build();
+
     let battery = world
         .spawn_gate((Name::new("BAT"), Battery::ON))
         .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
@@ -95,12 +114,28 @@ fn setup(world: &mut World) {
         world.spawn_wire(&battery, 0, &and_gate_a, 0).downgrade(),
         world.spawn_wire(&or_gate, 0, &and_gate_a, 1).downgrade(),
         world.spawn_wire(&and_gate_a, 0, &and_gate_b, 0).downgrade(),
-        world.spawn_wire(&not_gate_a, 0, &and_gate_b, 1).downgrade()
+        world.spawn_wire(&not_gate_a, 0, &and_gate_b, 1).downgrade(),
+
+        world.spawn_wire(&not_gate_b, 0, &not_gate_c, 0).downgrade(),
+        world.spawn_wire(&not_gate_c, 0, &not_gate_d, 0).downgrade(),
+        world.spawn_wire(&not_gate_d, 0, &or_gate, 2).downgrade()
     ];
 
     let mut sim = world.resource_mut::<LogicGraph>();
 
-    sim.add_data(vec![or_gate, not_gate_a, not_gate_b, and_gate_a, and_gate_b])
+    sim.add_data(
+        vec![
+            or_gate,
+
+            not_gate_a,
+            not_gate_b,
+            not_gate_c,
+            not_gate_d,
+
+            and_gate_a,
+            and_gate_b
+        ]
+    )
         .add_data(battery)
         .add_data(wires)
         .compile();

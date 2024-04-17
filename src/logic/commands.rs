@@ -52,6 +52,9 @@ impl LogicExt for World {
         self.spawn(OutputBundle::default())
     }
 
+    /// Create a wire `from_gate` at `from_output` to `to_gate` at `to_input`,
+    /// then update the gate output's `wires` set with the new wire entity.
+    ///
     /// # Panics
     ///
     /// Panics if the input/output index is out of bounds, or if the input/output entity at `index` is `None`.
