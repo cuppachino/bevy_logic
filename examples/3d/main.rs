@@ -5,8 +5,11 @@ mod camera_rig;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy::prelude::*;
 use bevy_logic::{
-    commands::{ GatePipeWorldMut, LogicExt },
-    components::{ AndGate, Battery, GateFan, LogicFans, NotGate, OrGate },
+    components::GateFan,
+    logic::{
+        commands::{ GateFanWorldMut, LogicExt },
+        gates::{ AndGate, Battery, NotGate, OrGate },
+    },
     prelude::*,
 };
 use camera_rig::CameraRigPlugin;
@@ -22,7 +25,7 @@ fn main() {
         .run();
 }
 
-fn gate_pipe(kind: GateFan, len: usize, height: f32) -> impl GatePipeWorldMut {
+fn gate_fan(kind: GateFan, len: usize, height: f32) -> impl GateFanWorldMut {
     #[cfg(debug_assertions)]
     if len == 0 {
         panic!("GatePipe must have at least one input");
@@ -50,38 +53,38 @@ fn setup(world: &mut World) {
 
     let or_gate = world
         .spawn_gate((Name::new("OR"), OrGate::default()))
-        .build_inputs(2, gate_pipe(GateFan::Input, 2, 1.0))
-        .build_outputs(1, gate_pipe(GateFan::Output, 1, 1.0))
+        .build_inputs(2, gate_fan(GateFan::Input, 2, 1.0))
+        .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
         .insert_bundle(or_bundle)
         .build();
     let not_gate_a = world
         .spawn_gate((Name::new("NOT"), NotGate))
-        .build_inputs(1, gate_pipe(GateFan::Input, 1, 1.0))
-        .build_outputs(1, gate_pipe(GateFan::Output, 1, 1.0))
+        .build_inputs(1, gate_fan(GateFan::Input, 1, 1.0))
+        .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
         .insert_bundle(not_bundle_a.clone())
         .build();
     let not_gate_b = world
         .spawn_gate((Name::new("NOT"), NotGate))
-        .build_inputs(1, gate_pipe(GateFan::Input, 1, 1.0))
-        .build_outputs(1, gate_pipe(GateFan::Output, 1, 1.0))
+        .build_inputs(1, gate_fan(GateFan::Input, 1, 1.0))
+        .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
         .insert_bundle(not_bundle_b)
         .build();
     let and_gate_a = world
         .spawn_gate((Name::new("AND"), AndGate))
-        .build_inputs(2, gate_pipe(GateFan::Input, 2, 1.0))
-        .build_outputs(1, gate_pipe(GateFan::Output, 1, 1.0))
+        .build_inputs(2, gate_fan(GateFan::Input, 2, 1.0))
+        .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
         .insert_bundle(and_bundle_a.clone())
         .build();
     let and_gate_b = world
         .spawn_gate((Name::new("AND"), AndGate))
-        .build_inputs(2, gate_pipe(GateFan::Input, 2, 1.0))
-        .build_outputs(1, gate_pipe(GateFan::Output, 1, 1.0))
+        .build_inputs(2, gate_fan(GateFan::Input, 2, 1.0))
+        .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
         .insert_bundle(and_bundle_b)
         .build();
 
     let battery = world
         .spawn_gate((Name::new("BAT"), Battery::ON))
-        .build_outputs(1, gate_pipe(GateFan::Output, 1, 1.0))
+        .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
         .insert_bundle(battery_bundle)
         .build();
     let wires = vec![

@@ -1,6 +1,6 @@
 use bevy::{ prelude::*, utils::petgraph::{ algo::kosaraju_scc, graphmap::DiGraphMap } };
 
-use crate::commands::{ GateData, WireData };
+use crate::logic::commands::{ GateData, WireData };
 
 pub mod prelude {
     pub use super::LogicGraph;

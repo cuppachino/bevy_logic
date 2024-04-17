@@ -4,7 +4,6 @@ pub mod logic;
 pub mod systems;
 pub mod components;
 pub mod resources;
-pub mod commands;
 
 #[allow(unused_imports)]
 pub mod prelude {
@@ -26,10 +25,10 @@ impl Plugin for LogicSimulationPlugin {
             .register_type::<components::LogicFans>()
             .register_type::<components::Wire>()
             .register_type::<components::GateFan>()
-            .register_type::<components::AndGate>()
-            .register_type::<components::OrGate>();
+            .register_type::<logic::gates::AndGate>()
+            .register_type::<logic::gates::OrGate>();
 
-        app.add_plugins(components::LogicGateTraitQueryPlugin)
+        app.add_plugins(logic::gates::LogicGateTraitQueryPlugin)
             .init_resource::<resources::LogicGraph>()
             .add_systems(FixedUpdate, systems::step_logic)
             .insert_resource(Time::<Fixed>::from_seconds(0.5));

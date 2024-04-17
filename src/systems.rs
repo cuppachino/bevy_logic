@@ -3,7 +3,7 @@ use bevy_trait_query::One;
 use crate::{
     components::{ GateFan, Wire },
     logic::{ signal::Signal, LogicGate },
-    prelude::LogicFans,
+    prelude::{ GateOutput, LogicFans },
     resources::LogicGraph,
 };
 
@@ -12,6 +12,7 @@ pub mod prelude {}
 pub fn step_logic(
     logic_graph: Res<LogicGraph>,
     logic_entities: Query<(&LogicFans, One<&dyn LogicGate>)>,
+    gate_outputs: Query<&GateOutput>,
     mut gate_fans: Query<&mut Signal, With<GateFan>>,
     mut wires: Query<(&mut Signal, &Wire), Without<GateFan>>
 ) {
@@ -51,14 +52,19 @@ pub fn step_logic(
             if let Ok(mut output_signal) = gate_fans.get_mut(*entity) {
                 *output_signal = signal;
             }
-            // Update the wire signals.
-            for (mut wire_signal, wire) in wires.iter_mut() {
-                if wire.from == *entity {
-                    *wire_signal = signal;
 
-                    if let Ok(mut input_signal) = gate_fans.get_mut(wire.to) {
-                        *input_signal = signal;
-                    }
+            // Grab the out-going wires from this output.
+            let out_going_wires = &gate_outputs
+                .get(*entity)
+                .expect("GateOutput does not exist").wires;
+
+            // Update the wire signals.
+            for entity in out_going_wires.iter() {
+                let (mut wire_signal, wire) = wires.get_mut(*entity).expect("Wire does not exist");
+                *wire_signal = signal;
+
+                if let Ok(mut input_signal) = gate_fans.get_mut(wire.to) {
+                    *input_signal = signal;
                 }
             }
         }

@@ -1,12 +1,20 @@
-use bevy::prelude::*;
+use bevy::{ ecs::entity::EntityHashSet, prelude::* };
 use derive_new::new;
 
-use crate::logic::{ signal::Signal, LogicGate };
+use crate::logic::signal::Signal;
 
 pub mod prelude {
     pub use super::{ LogicFans, GateInput, GateOutput, OutputBundle };
 }
 
+/// A connection between two nodes.
+#[derive(new, Component, Clone, Copy, Debug, Reflect)]
+pub struct Wire {
+    pub from: Entity,
+    pub to: Entity,
+}
+
+/// Stores the input and output entities for a logic gate entity.
 #[derive(Component, Clone, Debug, Default, PartialEq, Eq, Reflect)]
 pub struct LogicFans {
     pub inputs: Vec<Option<Entity>>,
@@ -99,12 +107,19 @@ impl From<GateOutput> for GateFan {
     }
 }
 
+/// Marks an entity as an input.
 #[derive(Component, Default)]
 pub struct GateInput;
 
+/// Marks an entity as an output, and stores
+/// the [`Entity`] IDs of out-going wires.
 #[derive(Component, Default)]
-pub struct GateOutput;
+pub struct GateOutput {
+    pub wires: EntityHashSet,
+}
 
+/// A bundle that can be used to create a child
+/// **input** node of a logic gate entity.
 #[derive(Bundle)]
 pub struct InputBundle {
     pub signal: Signal,
@@ -124,6 +139,8 @@ impl Default for InputBundle {
     }
 }
 
+/// A bundle that can be used to create a child
+/// **output** node of a logic gate entity.
 #[derive(Bundle)]
 pub struct OutputBundle {
     pub signal: Signal,
@@ -136,116 +153,9 @@ impl Default for OutputBundle {
     fn default() -> Self {
         Self {
             signal: Signal::Undefined,
-            output: GateOutput,
+            output: GateOutput::default(),
             fan: GateFan::Output,
             spatial_bundle: Default::default(),
         }
-    }
-}
-
-/// A connection between two nodes.
-#[derive(new, Component, Clone, Copy, Debug, Reflect)]
-pub struct Wire {
-    pub from: Entity,
-    pub to: Entity,
-}
-
-#[derive(Component, Clone, Copy, Debug, Reflect)]
-pub struct AndGate;
-
-impl LogicGate for AndGate {
-    fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]) {
-        let signal = inputs.iter().all(Signal::is_true);
-        outputs.iter_mut().for_each(|output_signal| {
-            *output_signal = signal.into();
-        });
-    }
-}
-
-#[derive(Component, Clone, Copy, Debug, Reflect)]
-pub struct NotGate;
-
-impl LogicGate for NotGate {
-    fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]) {
-        let signal = !inputs.iter().all(Signal::is_true);
-        outputs.iter_mut().for_each(|output_signal| {
-            *output_signal = signal.into();
-        });
-    }
-}
-
-#[derive(Component, Clone, Copy, Debug, Default, Reflect)]
-pub struct OrGate {
-    /// If true, the gate will be a NOR gate instead of an OR gate.
-    pub invert_output: bool,
-    /// If true, the gate will act as an analog adder,
-    /// computing the sum of all inputs.
-    pub is_adder: bool,
-}
-impl OrGate {
-    pub const NOR: OrGate = OrGate { is_adder: false, invert_output: true };
-}
-
-impl LogicGate for OrGate {
-    fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]) {
-        let signal = if self.is_adder {
-            inputs.iter().fold(Signal::OFF, |acc, input| { acc + *input })
-        } else {
-            inputs.iter().any(Signal::is_true).into()
-        };
-
-        let signal = if self.invert_output { !signal } else { signal };
-
-        outputs.iter_mut().for_each(|output_signal| {
-            *output_signal = signal;
-        });
-    }
-}
-
-/// A battery that emits a constant signal.
-#[derive(Component, Clone, Copy, Debug, Reflect)]
-pub struct Battery {
-    pub signal: Signal,
-}
-
-impl Default for Battery {
-    fn default() -> Self {
-        Self::ON
-    }
-}
-
-#[allow(dead_code)]
-impl Battery {
-    pub const OFF: Battery = Battery::new(Signal::OFF);
-    pub const ON: Battery = Battery::new(Signal::ON);
-    pub const NEG: Battery = Battery::new(Signal::NEG);
-
-    /// Create a new battery with `signal`.
-    pub const fn new(signal: Signal) -> Self {
-        Self { signal }
-    }
-}
-
-impl LogicGate for Battery {
-    fn evaluate(&self, _: &[Signal], outputs: &mut [Signal]) {
-        outputs.iter_mut().for_each(|output_signal| {
-            *output_signal = self.signal;
-        });
-    }
-}
-
-pub struct LogicGateTraitQueryPlugin;
-
-impl Plugin for LogicGateTraitQueryPlugin {
-    fn build(&self, app: &mut App) {
-        // We must import this trait in order to register our components.
-        // If we don't register them, they will be invisible to the game engine.
-        use bevy_trait_query::RegisterExt;
-
-        app.register_component_as::<dyn LogicGate, Battery>();
-
-        app.register_component_as::<dyn LogicGate, AndGate>()
-            .register_component_as::<dyn LogicGate, NotGate>()
-            .register_component_as::<dyn LogicGate, OrGate>();
     }
 }

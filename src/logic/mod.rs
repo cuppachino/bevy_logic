@@ -1,7 +1,11 @@
 pub mod signal;
+pub mod gates;
+pub mod commands;
 
 pub mod prelude {
     pub use super::signal::Signal;
+    pub use super::gates::*;
+    pub use super::commands::LogicExt;
 }
 
 /// A trait that defines the behavior of a logic gate.

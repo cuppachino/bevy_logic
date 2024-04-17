@@ -2,7 +2,10 @@ use std::marker::PhantomData;
 
 use bevy::prelude::*;
 
-use crate::{ components::{ InputBundle, Wire, LogicFans, OutputBundle }, logic::signal::Signal };
+use crate::{
+    components::{ GateOutput, InputBundle, LogicFans, OutputBundle, Wire },
+    logic::signal::Signal,
+};
 
 pub trait LogicExt {
     type EntityBuilder<'a> where Self: 'a;
@@ -62,6 +65,11 @@ impl LogicExt for World {
         let from = from_gate.output(from_output);
         let to = to_gate.input(to_input);
         let entity = self.spawn((Signal::Undefined, Wire::new(from, to))).id();
+
+        self.get_mut::<GateOutput>(from)
+            .expect("from_gate entity does not have GateOutput component")
+            .wires.insert(entity);
+
         WireBuilder {
             cmd: self,
             data: WireData {
@@ -139,9 +147,15 @@ pub struct GateBuilder<'a, T, I = Unknown, O = Unknown> {
     data: GateData<I, O>,
 }
 
-/// A function that takes a mutable reference to an [`EntityWorldMut`] and an `index`.
-pub trait GatePipeWorldMut: FnMut(&mut EntityWorldMut, usize) {}
-impl<T> GatePipeWorldMut for T where T: FnMut(&mut EntityWorldMut, usize) {}
+/// A trait that provides mutable access to an [`EntityWorldMut`] and its index in the range `0..count`.
+pub trait GateFanWorldMut {
+    fn modify_fan(&mut self, cmd: &mut EntityWorldMut, index: usize);
+}
+impl<T> GateFanWorldMut for T where T: FnMut(&mut EntityWorldMut, usize) {
+    fn modify_fan(&mut self, cmd: &mut EntityWorldMut, index: usize) {
+        self(cmd, index);
+    }
+}
 
 impl<'a, I, O> GateBuilder<'a, World, I, O> {
     pub fn world(&mut self) -> &mut World {
@@ -185,12 +199,12 @@ impl<'a, O> GateBuilder<'a, World, Unknown, O> {
         }
     }
 
-    /// Build `count` input entities and call `build` on each entity. Provides
+    /// Build `count` input entities and use `builder` on each entity. Provides
     /// access to the input [`EntityWorldMut`] and its index in the range `0..count`.
     pub fn build_inputs(
         self,
         count: usize,
-        mut build: impl GatePipeWorldMut
+        mut builder: impl GateFanWorldMut
     ) -> GateBuilder<'a, World, Known, O> {
         let mut inputs = Vec::with_capacity(count);
 
@@ -199,7 +213,7 @@ impl<'a, O> GateBuilder<'a, World, Unknown, O> {
                 let mut cmd = gate.spawn(InputBundle::default());
                 let input_entity = cmd.id();
                 inputs.push(Some(input_entity));
-                build(&mut cmd, i);
+                builder.modify_fan(&mut cmd, i);
             }
         });
 
@@ -239,12 +253,12 @@ impl<'a, I> GateBuilder<'a, World, I, Unknown> {
         }
     }
 
-    /// Build `count` output entities and call `build` on each entity. Provides
+    /// Build `count` output entities and call `builder` on each entity. Provides
     /// access to the output [`EntityWorldMut`] and its index in the range `0..count`.
     pub fn build_outputs(
         self,
         count: usize,
-        mut build: impl GatePipeWorldMut
+        mut builder: impl GateFanWorldMut
     ) -> GateBuilder<'a, World, I, Known> {
         let mut outputs = Vec::with_capacity(count);
 
@@ -253,7 +267,7 @@ impl<'a, I> GateBuilder<'a, World, I, Unknown> {
                 let mut cmd = gate.spawn(OutputBundle::default());
                 let output_entity = cmd.id();
                 outputs.push(Some(output_entity));
-                build(&mut cmd, i);
+                builder.modify_fan(&mut cmd, i);
             }
         });
 
