@@ -110,6 +110,7 @@ pub struct InputBundle {
     pub signal: Signal,
     pub input: GateInput,
     pub fan: GateFan,
+    pub spatial_bundle: SpatialBundle,
 }
 
 impl Default for InputBundle {
@@ -118,6 +119,7 @@ impl Default for InputBundle {
             signal: Signal::Undefined,
             input: GateInput,
             fan: GateFan::Input,
+            spatial_bundle: Default::default(),
         }
     }
 }
@@ -127,6 +129,7 @@ pub struct OutputBundle {
     pub signal: Signal,
     pub output: GateOutput,
     pub fan: GateFan,
+    pub spatial_bundle: SpatialBundle,
 }
 
 impl Default for OutputBundle {
@@ -135,6 +138,7 @@ impl Default for OutputBundle {
             signal: Signal::Undefined,
             output: GateOutput,
             fan: GateFan::Output,
+            spatial_bundle: Default::default(),
         }
     }
 }
