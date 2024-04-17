@@ -13,24 +13,32 @@ pub mod prelude {
     pub use crate::resources::prelude::*;
 
     pub use super::LogicSimulationPlugin;
+    pub use super::LogicReflectPlugin;
 }
 
-/// A plugin group containing all logic simulation systems.
+/// A plugin group that adds all crate features to an [`App`].
 #[derive(Default)]
 pub struct LogicSimulationPlugin;
 
 impl Plugin for LogicSimulationPlugin {
     fn build(&self, app: &mut App) {
+        use prelude::*;
+        app.add_plugins((LogicSchedulePlugin, LogicReflectPlugin, LogicGatePlugin))
+            .insert_resource(Time::<LogicStep>::from_seconds(0.5))
+            .init_resource::<LogicGraph>()
+            .add_systems(LogicUpdate, systems::step_logic);
+    }
+}
+
+/// A plugin that registers components' reflect data for a given [`App`].
+pub struct LogicReflectPlugin;
+
+impl Plugin for LogicReflectPlugin {
+    fn build(&self, app: &mut App) {
         app.register_type::<logic::signal::Signal>()
-            .register_type::<components::LogicFans>()
             .register_type::<components::Wire>()
             .register_type::<components::GateFan>()
-            .register_type::<logic::gates::AndGate>()
-            .register_type::<logic::gates::OrGate>();
-
-        app.add_plugins(logic::gates::LogicGateTraitQueryPlugin)
-            .init_resource::<resources::LogicGraph>()
-            .add_systems(FixedUpdate, systems::step_logic)
-            .insert_resource(Time::<Fixed>::from_seconds(0.5));
+            .register_type::<components::LogicFans>()
+            .register_type::<resources::LogicGraph>();
     }
 }

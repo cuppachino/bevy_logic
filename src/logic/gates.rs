@@ -2,23 +2,39 @@ use bevy::prelude::*;
 
 use crate::logic::{ LogicGate, signal::Signal };
 
-pub struct LogicGateTraitQueryPlugin;
+/// This plugin registers basic logic gates and a battery component.
+///
+/// They can be queried using the [`LogicGate`] trait.
+///
+/// # Example
+///
+/// ```no_run
+/// fn query(q: Query<&One<dyn LogicGate>>) {
+///     // ...
+/// }
+///
+/// ```
+pub struct LogicGatePlugin;
 
-impl Plugin for LogicGateTraitQueryPlugin {
+impl Plugin for LogicGatePlugin {
     fn build(&self, app: &mut App) {
         // We must import this trait in order to register our components.
         // If we don't register them, they will be invisible to the game engine.
         use bevy_trait_query::RegisterExt;
-
         app.register_component_as::<dyn LogicGate, AndGate>()
             .register_component_as::<dyn LogicGate, OrGate>()
             .register_component_as::<dyn LogicGate, NotGate>()
             .register_component_as::<dyn LogicGate, Battery>();
+
+        // Register the components' reflection data.
+        app.register_type::<AndGate>()
+            .register_type::<OrGate>()
+            .register_type::<NotGate>()
+            .register_type::<Battery>();
     }
 }
 
-/// A [`Battery`] emits a constant signal. It is a constant source
-/// of power for other logic gates.
+/// A [`Battery`] emits a constant signal.
 #[derive(Component, Clone, Copy, Debug, Reflect)]
 pub struct Battery {
     pub signal: Signal,
