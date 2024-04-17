@@ -25,7 +25,8 @@ fn main() {
         .run();
 }
 
-///
+/// Spawn a bunch of gates and wires to create a logic circuit, add them to the
+/// [`LogicGraph`] resource, and compile the graph.
 fn setup(world: &mut World) {
     let battery_bundle = pbr_bundle(world, GateIcon::Battery, Vec2::new(-4.0, 0.0));
     let or_bundle = pbr_bundle(world, GateIcon::Or, Vec2::new(-2.0, 0.0));
