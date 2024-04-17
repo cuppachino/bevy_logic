@@ -7,8 +7,9 @@ pub mod prelude {
 }
 
 /// A resources that stores logic gates' graph.
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Reflect)]
 pub struct LogicGraph {
+    #[reflect(ignore)]
     pub graph: DiGraphMap<Entity, Entity>,
     sorted: Vec<Entity>,
 }
