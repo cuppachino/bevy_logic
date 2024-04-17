@@ -139,6 +139,10 @@ pub struct GateBuilder<'a, T, I = Unknown, O = Unknown> {
     data: GateData<I, O>,
 }
 
+/// A function that takes a mutable reference to an [`EntityWorldMut`] and an `index`.
+pub trait GatePipeWorldMut: FnMut(&mut EntityWorldMut, usize) {}
+impl<T> GatePipeWorldMut for T where T: FnMut(&mut EntityWorldMut, usize) {}
+
 impl<'a, I, O> GateBuilder<'a, World, I, O> {
     pub fn world(&mut self) -> &mut World {
         self.cmd
@@ -180,6 +184,37 @@ impl<'a, O> GateBuilder<'a, World, Unknown, O> {
             },
         }
     }
+
+    /// Build `count` input entities and call `build` on each entity. Provides
+    /// access to the input [`EntityWorldMut`] and its index in the range `0..count`.
+    pub fn build_inputs(
+        self,
+        count: usize,
+        mut build: impl GatePipeWorldMut
+    ) -> GateBuilder<'a, World, Known, O> {
+        let mut inputs = Vec::with_capacity(count);
+
+        self.cmd.entity_mut(self.data.entity).with_children(|gate| {
+            for i in 0..count {
+                let mut cmd = gate.spawn(InputBundle::default());
+                let input_entity = cmd.id();
+                inputs.push(Some(input_entity));
+                build(&mut cmd, i);
+            }
+        });
+
+        GateBuilder {
+            cmd: self.cmd,
+            data: GateData {
+                entity: self.data.entity,
+                fans: LogicFans {
+                    inputs,
+                    outputs: self.data.fans.outputs,
+                },
+                _state: PhantomData,
+            },
+        }
+    }
 }
 
 impl<'a, I> GateBuilder<'a, World, I, Unknown> {
@@ -188,6 +223,37 @@ impl<'a, I> GateBuilder<'a, World, I, Unknown> {
         self.cmd.entity_mut(self.data.entity).with_children(|gate| {
             for _ in 0..count {
                 outputs.push(Some(gate.spawn(OutputBundle::default()).id()));
+            }
+        });
+
+        GateBuilder {
+            cmd: self.cmd,
+            data: GateData {
+                entity: self.data.entity,
+                fans: LogicFans {
+                    inputs: self.data.fans.inputs,
+                    outputs,
+                },
+                _state: PhantomData,
+            },
+        }
+    }
+
+    /// Build `count` output entities and call `build` on each entity. Provides
+    /// access to the output [`EntityWorldMut`] and its index in the range `0..count`.
+    pub fn build_outputs(
+        self,
+        count: usize,
+        mut build: impl GatePipeWorldMut
+    ) -> GateBuilder<'a, World, I, Known> {
+        let mut outputs = Vec::with_capacity(count);
+
+        self.cmd.entity_mut(self.data.entity).with_children(|gate| {
+            for i in 0..count {
+                let mut cmd = gate.spawn(OutputBundle::default());
+                let output_entity = cmd.id();
+                outputs.push(Some(output_entity));
+                build(&mut cmd, i);
             }
         });
 
