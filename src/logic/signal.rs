@@ -1,7 +1,8 @@
+use bevy::prelude::*;
 use derive_more::{ From, Display };
 
 /// State storage for logic simulation.
-#[derive(Clone, Copy, Debug, Display, PartialEq, PartialOrd, From)]
+#[derive(Component, Clone, Copy, Debug, Display, PartialEq, PartialOrd, From, Reflect)]
 pub enum Signal {
     Analog(f32),
     Digital(bool),
@@ -51,6 +52,18 @@ impl std::ops::Add<f32> for Signal {
             Signal::Analog(value) => Signal::Analog(value + rhs),
             Signal::Digital(true) => Signal::Analog(1.0 + rhs),
             Signal::Digital(false) => Signal::Analog(rhs),
+            Signal::Undefined => Signal::Undefined,
+        }
+    }
+}
+
+impl std::ops::Not for Signal {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Signal::Analog(value) => Signal::Analog(-value),
+            Signal::Digital(value) => Signal::Digital(!value),
             Signal::Undefined => Signal::Undefined,
         }
     }
