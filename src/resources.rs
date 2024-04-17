@@ -20,6 +20,12 @@ impl LogicGraph {
         self
     }
 
+    /// Remove [`LogicGraphData`] from self.
+    pub fn remove_data<T: LogicGraphData>(&mut self, data: T) -> &mut Self {
+        data.remove_from_graph(self);
+        self
+    }
+
     pub fn compile(&mut self) {
         let post_order = kosaraju_scc(&self.graph);
 
@@ -41,17 +47,28 @@ impl LogicGraph {
 pub trait LogicGraphData {
     /// Add `self` to a [`LogicGraph`].
     fn add_to_graph(&self, graph: &mut LogicGraph);
+
+    /// Remove `self` from a [`LogicGraph`].
+    fn remove_from_graph(&self, graph: &mut LogicGraph);
 }
 
 impl<I, O> LogicGraphData for GateData<I, O> {
     fn add_to_graph(&self, graph: &mut LogicGraph) {
         graph.graph.add_node(self.id());
     }
+
+    fn remove_from_graph(&self, graph: &mut LogicGraph) {
+        graph.graph.remove_node(self.id());
+    }
 }
 
 impl LogicGraphData for WireData {
     fn add_to_graph(&self, graph: &mut LogicGraph) {
         graph.graph.add_edge(self.from_gate, self.to_gate, self.id());
+    }
+
+    fn remove_from_graph(&self, graph: &mut LogicGraph) {
+        graph.graph.remove_edge(self.from_gate, self.to_gate);
     }
 }
 
@@ -61,12 +78,24 @@ impl<T: LogicGraphData> LogicGraphData for Vec<T> {
             data.add_to_graph(graph);
         }
     }
+
+    fn remove_from_graph(&self, graph: &mut LogicGraph) {
+        for data in self {
+            data.remove_from_graph(graph);
+        }
+    }
 }
 
 impl<T: LogicGraphData> LogicGraphData for &[T] {
     fn add_to_graph(&self, graph: &mut LogicGraph) {
         for data in self.iter() {
             data.add_to_graph(graph);
+        }
+    }
+
+    fn remove_from_graph(&self, graph: &mut LogicGraph) {
+        for data in self.iter() {
+            data.remove_from_graph(graph);
         }
     }
 }
