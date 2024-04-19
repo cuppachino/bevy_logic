@@ -1,6 +1,6 @@
 use bevy::{ prelude::*, utils::petgraph::{ algo::kosaraju_scc, graphmap::DiGraphMap } };
 
-use crate::logic::commands::{ GateData, WireData };
+use crate::{ components::Wire, logic::commands::{ GateData, WireData } };
 
 pub mod prelude {
     pub use super::LogicGraph;
@@ -25,6 +25,45 @@ impl LogicGraph {
     pub fn remove_data<T: LogicGraphData>(&mut self, data: T) -> &mut Self {
         data.remove_from_graph(self);
         self
+    }
+
+    /// Add a gate to the graph.
+    pub fn add_gate(&mut self, gate_entity: Entity) {
+        self.graph.add_node(gate_entity);
+    }
+
+    /// Connect two gates with a wire.
+    pub fn add_wire(&mut self, from_gate: Entity, to_gate: Entity, wire_entity: Entity) {
+        self.graph.add_edge(from_gate, to_gate, wire_entity);
+    }
+
+    /// Remove a gate from the graph.
+    pub fn remove_gate(&mut self, gate_entity: Entity) {
+        self.graph.remove_node(gate_entity);
+    }
+
+    /// Remove a wire from the graph.
+    pub fn remove_wire(&mut self, from_gate: Entity, to_gate: Entity) {
+        self.graph.remove_edge(from_gate, to_gate);
+    }
+
+    /// Returns an iterator over all incoming wires to a gate.
+    pub fn iter_incoming_wires(&self, gate: Entity) -> impl Iterator<Item = (Entity, Wire)> + '_ {
+        self.graph
+            .edges_directed(gate, bevy::utils::petgraph::Direction::Incoming)
+            .map(|(from, to, wire)| (*wire, Wire { from, to }))
+    }
+
+    /// Returns an iterator over all outgoing wires from a gate.
+    pub fn iter_outgoing_wires(&self, gate: Entity) -> impl Iterator<Item = (Entity, Wire)> + '_ {
+        self.graph
+            .edges_directed(gate, bevy::utils::petgraph::Direction::Outgoing)
+            .map(|(from, to, wire)| (*wire, Wire { from, to }))
+    }
+
+    /// Iterate over all wires connected to a gate. This includes both incoming and outgoing wires.
+    pub fn iter_all_wires(&self, gate: Entity) -> impl Iterator<Item = (Entity, Wire)> + '_ {
+        self.iter_incoming_wires(gate).chain(self.iter_outgoing_wires(gate))
     }
 
     pub fn compile(&mut self) {

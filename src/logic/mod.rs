@@ -4,10 +4,10 @@ pub mod commands;
 pub mod schedule;
 
 pub mod prelude {
-    pub use super::signal::Signal;
-    pub use super::gates::*;
     pub use super::commands::LogicExt;
-    pub use super::schedule::{ LogicSchedulePlugin, LogicStep, LogicUpdate, FixedLogicStepExt };
+    pub use super::gates::*;
+    pub use super::schedule::prelude::*;
+    pub use super::signal::Signal;
 }
 
 /// A trait that defines the behavior of a logic gate.

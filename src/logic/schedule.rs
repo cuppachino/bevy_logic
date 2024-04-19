@@ -2,6 +2,19 @@ use std::time::Duration;
 
 use bevy::{ app::FixedMain, ecs::schedule::ScheduleLabel, prelude::* };
 
+pub mod prelude {
+    pub use super::{ LogicSchedulePlugin, LogicStep, LogicUpdate, FixedLogicStepExt };
+    pub use super::LogicSystemSet;
+}
+
+#[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum LogicSystemSet {
+    /// Reads [`LogicEvent`] events and updates the [`LogicGraph`] resource.
+    SyncGraph,
+    /// Evaluates the [`LogicGraph`] resource and updates all entities in a single step.
+    StepLogic,
+}
+
 /// A plugin that initializes the [`LogicUpdate`] schedule for a given [`App`].
 ///
 /// This works just like bevy's [`FixedUpdate`] schedule. The speed of the simulation
@@ -13,6 +26,16 @@ pub struct LogicSchedulePlugin;
 impl Plugin for LogicSchedulePlugin {
     fn build(&self, app: &mut App) {
         app.init_schedule(LogicUpdate).add_systems(FixedMain, run_fixed_main_schedule);
+
+        app.configure_sets(Update, (LogicSystemSet::SyncGraph, LogicSystemSet::StepLogic).chain())
+            .configure_sets(
+                FixedUpdate,
+                (LogicSystemSet::SyncGraph, LogicSystemSet::StepLogic).chain()
+            )
+            .configure_sets(
+                LogicUpdate,
+                (LogicSystemSet::SyncGraph, LogicSystemSet::StepLogic).chain()
+            );
     }
 }
 

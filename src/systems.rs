@@ -2,16 +2,20 @@ use bevy::prelude::*;
 use bevy_trait_query::One;
 use crate::{
     components::{ GateFan, Wire },
+    events::LogicEvent,
     logic::{ signal::Signal, LogicGate },
-    prelude::{ GateOutput, LogicFans },
+    prelude::{ GateOutput, LogicGateFans },
     resources::LogicGraph,
 };
 
 pub mod prelude {}
 
+/// A system that evaluates the [`LogicGraph`] resource and updates all entities in a single step.
+///
+/// This propagates signals through [`Signal`] and [`Wire`] components.
 pub fn step_logic(
     logic_graph: Res<LogicGraph>,
-    logic_entities: Query<(&LogicFans, One<&dyn LogicGate>)>,
+    logic_entities: Query<(&LogicGateFans, One<&dyn LogicGate>)>,
     gate_outputs: Query<&GateOutput>,
     mut gate_fans: Query<&mut Signal, With<GateFan>>,
     mut wires: Query<(&mut Signal, &Wire), Without<GateFan>>
@@ -69,4 +73,110 @@ pub fn step_logic(
             }
         }
     }
+}
+
+/// A system that reads [`LogicEvent`]s and updates the [`LogicGraph`] resource and
+/// associated [`GateOutput`] components.
+///
+/// See [`LogicEventPlugin`] for more information.
+///
+/// [`LogicEvent`]: crate::events::LogicEventPlugin
+pub fn read_logic_events(
+    mut logic_ev_rd: EventReader<LogicEvent>,
+    mut sim: ResMut<LogicGraph>,
+    mut gate_outputs: Query<&mut GateOutput>,
+    wires: Query<&Wire>,
+    fans: Query<&Parent, With<GateFan>>
+) {
+    for ev in logic_ev_rd.read() {
+        match ev {
+            LogicEvent::AddGate(entity) => sim.add_gate(*entity),
+            LogicEvent::RemoveGate(entity) => {
+                // Try to update the wires Set in [`GateOutput`]s
+                // of all incoming wires in the world,
+                // if the gate still exists.
+                sim.iter_all_wires(*entity).for_each(|(wire_entity, wire)| {
+                    let Ok(mut output) = gate_outputs.get_mut(wire.from) else {
+                        return;
+                    };
+                    output.wires.remove(&wire_entity);
+                });
+
+                // Remove the gate from the graph.
+                sim.remove_gate(*entity);
+            }
+            &LogicEvent::AddWire { from_gate, to_gate, wire_entity } => {
+                sim.add_wire(from_gate, to_gate, wire_entity);
+            }
+            &LogicEvent::RemoveWire { from_gate, to_gate, wire_entity } => {
+                // Try to update the wires Set in [`GateOutput`]s
+                // of all incoming wires in the world, if the gate still exists.
+                let Ok(mut output) = gate_outputs.get_mut(from_gate) else {
+                    return;
+                };
+                output.wires.remove(&wire_entity);
+
+                // Remove the wire from the graph.
+                sim.remove_wire(from_gate, to_gate);
+            }
+            LogicEvent::AddWireByEntity(entity) => {
+                let wire = wires
+                    .get(*entity)
+                    .expect(
+                        "Tried to `LogicEvent::AddWire` an entity that either does not exist or does not have a `Wire` component"
+                    );
+
+                // Get the parent of each fan of the wire.
+                let from_gate = {
+                    let parent = fans
+                        .get(wire.from)
+                        .expect(
+                            "Wire.from does not have a parent, did u connect a wire directly to gate instead of a fan?"
+                        );
+                    parent.get()
+                };
+                let to_gate = {
+                    let parent = fans
+                        .get(wire.to)
+                        .expect(
+                            "Wire.to does not have a parent, did u connect a wire directly to gate instead of a fan?"
+                        );
+                    parent.get()
+                };
+
+                // Add the wire to the graph.
+                sim.add_wire(from_gate, to_gate, *entity);
+            }
+            LogicEvent::RemoveWireByEntity(entity) => {
+                let wire = wires
+                    .get(*entity)
+                    .expect(
+                        "Tried to `LogicEvent::RemoveWire` an entity that either does not exist or does not have a `Wire` component"
+                    );
+
+                // Get the parent of each fan of the wire.
+                let from_gate = {
+                    let parent = fans
+                        .get(wire.from)
+                        .expect(
+                            "Wire.from does not have a parent, did u connect a wire directly to gate instead of a fan?"
+                        );
+                    parent.get()
+                };
+                let to_gate = {
+                    let parent = fans
+                        .get(wire.to)
+                        .expect(
+                            "Wire.to does not have a parent, did u connect a wire directly to gate instead of a fan?"
+                        );
+                    parent.get()
+                };
+
+                // Remove the wire from the graph.
+                sim.remove_wire(from_gate, to_gate);
+            }
+        }
+    }
+
+    sim.compile();
 }

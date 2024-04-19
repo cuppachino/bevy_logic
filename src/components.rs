@@ -4,7 +4,7 @@ use derive_new::new;
 use crate::logic::signal::Signal;
 
 pub mod prelude {
-    pub use super::{ LogicFans, GateInput, GateOutput, OutputBundle };
+    pub use super::{ LogicGateFans, GateInput, GateOutput, OutputBundle };
 }
 
 /// A connection between two nodes.
@@ -14,14 +14,15 @@ pub struct Wire {
     pub to: Entity,
 }
 
-/// Stores the input and output entities for a logic gate entity.
+/// Marks an entity as a logic gate entity, and stores the
+/// input and output fans of the gate.
 #[derive(Component, Clone, Debug, Default, PartialEq, Eq, Reflect)]
-pub struct LogicFans {
+pub struct LogicGateFans {
     pub inputs: Vec<Option<Entity>>,
     pub outputs: Vec<Option<Entity>>,
 }
 
-impl LogicFans {
+impl LogicGateFans {
     pub fn new() -> Self {
         Self {
             inputs: Vec::new(),

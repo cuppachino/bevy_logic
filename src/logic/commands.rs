@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use bevy::prelude::*;
 
 use crate::{
-    components::{ GateOutput, InputBundle, LogicFans, OutputBundle, Wire },
+    components::{ GateOutput, InputBundle, LogicGateFans, OutputBundle, Wire },
     logic::signal::Signal,
 };
 
@@ -38,7 +38,7 @@ impl LogicExt for World {
             cmd: self,
             data: GateData {
                 entity,
-                fans: LogicFans::default(),
+                fans: LogicGateFans::default(),
                 _state: PhantomData,
             },
         }
@@ -95,7 +95,7 @@ pub struct Known;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GateData<I = Unknown, O = Unknown> {
     entity: Entity,
-    fans: LogicFans,
+    fans: LogicGateFans,
     _state: PhantomData<(I, O)>,
 }
 
@@ -193,7 +193,7 @@ impl<'a, O> GateBuilder<'a, World, Unknown, O> {
             cmd: self.cmd,
             data: GateData {
                 entity: self.data.entity,
-                fans: LogicFans {
+                fans: LogicGateFans {
                     inputs,
                     outputs: self.data.fans.outputs,
                 },
@@ -224,7 +224,7 @@ impl<'a, O> GateBuilder<'a, World, Unknown, O> {
             cmd: self.cmd,
             data: GateData {
                 entity: self.data.entity,
-                fans: LogicFans {
+                fans: LogicGateFans {
                     inputs,
                     outputs: self.data.fans.outputs,
                 },
@@ -247,7 +247,7 @@ impl<'a, I> GateBuilder<'a, World, I, Unknown> {
             cmd: self.cmd,
             data: GateData {
                 entity: self.data.entity,
-                fans: LogicFans {
+                fans: LogicGateFans {
                     inputs: self.data.fans.inputs,
                     outputs,
                 },
@@ -278,7 +278,7 @@ impl<'a, I> GateBuilder<'a, World, I, Unknown> {
             cmd: self.cmd,
             data: GateData {
                 entity: self.data.entity,
-                fans: LogicFans {
+                fans: LogicGateFans {
                     inputs: self.data.fans.inputs,
                     outputs,
                 },
