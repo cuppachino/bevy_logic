@@ -15,7 +15,9 @@ exclude = ["assets/*"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.13.2", default-features = false }
+bevy = { version = "0.13.2", default-features = false, features = [
+    "bevy_render",
+] }
 bevy-trait-query = "0.5.1"
 derive-new = "0.6.0"
 derive_more = "0.99.17"
