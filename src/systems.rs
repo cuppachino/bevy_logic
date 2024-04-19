@@ -109,7 +109,7 @@ pub fn read_logic_events(
                 sim.add_wire(from_gate, to_gate, wire_entity);
 
                 // Try to update the wires Set in the [`GateOutput`].
-                let Ok(mut output) = gate_outputs.get_mut(from_gate) else {
+                let Ok(mut output) = gate_outputs.get_mut(from_output) else {
                     continue;
                 };
                 output.wires.insert(wire_entity);
