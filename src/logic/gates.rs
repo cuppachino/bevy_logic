@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
-use crate::logic::{ LogicGate, signal::Signal };
+use crate::{ logic::{ signal::Signal, LogicGate }, utils::NumExt };
+
+use super::signal::SignalExt;
 
 /// This plugin registers basic logic gates and a battery component.
 ///
@@ -24,12 +26,14 @@ impl Plugin for LogicGatePlugin {
         app.register_component_as::<dyn LogicGate, AndGate>()
             .register_component_as::<dyn LogicGate, OrGate>()
             .register_component_as::<dyn LogicGate, NotGate>()
+            .register_component_as::<dyn LogicGate, XorGate>()
             .register_component_as::<dyn LogicGate, Battery>();
 
         // Register the components' reflection data.
         app.register_type::<AndGate>()
             .register_type::<OrGate>()
             .register_type::<NotGate>()
+            .register_type::<XorGate>()
             .register_type::<Battery>();
     }
 }
@@ -82,10 +86,8 @@ pub struct AndGate;
 
 impl LogicGate for AndGate {
     fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]) {
-        let signal = inputs.iter().all(Signal::is_true);
-        outputs.iter_mut().for_each(|output_signal| {
-            *output_signal = signal.into();
-        });
+        let signal: Signal = inputs.iter().all(Signal::is_true).into();
+        outputs.set_all(signal);
     }
 }
 
@@ -103,10 +105,8 @@ pub struct NotGate;
 
 impl LogicGate for NotGate {
     fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]) {
-        let signal = !inputs.iter().all(Signal::is_true);
-        outputs.iter_mut().for_each(|output_signal| {
-            *output_signal = signal.into();
-        });
+        let signal: Signal = (!inputs.iter().all(Signal::is_true)).into();
+        outputs.set_all(signal);
     }
 }
 
@@ -146,8 +146,35 @@ impl LogicGate for OrGate {
 
         let signal = if self.invert_output { !signal } else { signal };
 
-        outputs.iter_mut().for_each(|output_signal| {
-            *output_signal = signal;
-        });
+        outputs.set_all(signal);
+    }
+}
+
+/// The XOR gate emits a signal if the number of true inputs is odd.
+///
+/// In other words, if there are an odd number of truthy inputs, the output is true.
+///
+/// ```md
+/// Truth table:
+/// | A | B | Q |
+/// |---|---|---|
+/// | 0 | 0 | 0 |
+/// | 0 | 1 | 1 |
+/// | 1 | 0 | 1 |
+/// | 1 | 1 | 0 |
+/// ```
+#[derive(Component, Clone, Copy, Debug, Default, Reflect)]
+pub struct XorGate;
+
+impl LogicGate for XorGate {
+    fn evaluate(&self, inputs: &[super::signal::Signal], outputs: &mut [super::signal::Signal]) {
+        let signal: Signal = inputs
+            .iter()
+            .filter(|s| s.is_true())
+            .count()
+            .is_odd()
+            .into();
+
+        outputs.set_all(signal);
     }
 }

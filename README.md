@@ -22,6 +22,69 @@ A logic gate simulation plugin for [`bevy`](https://bevyengine.org/).
 cargo run --release --example 3d
 ```
 
+### Custom logic gates
+
+You can create your own logic gates by implementing the `LogicGate` trait...
+
+```rust
+use bevy_logic::prelude::*;
+
+/// The XOR gate emits a signal if the number of true inputs is odd.
+#[derive(Component, Clone, Copy, Debug, Default, Reflect)]
+pub struct XorGate;
+
+impl LogicGate for XorGate {
+    fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]) {
+        let signal: Signal = inputs
+            .iter()
+            .filter(|s| s.is_true())
+            .count()
+            .is_odd()
+            .into();
+
+        outputs.set_all(signal);
+    }
+}
+```
+
+And then registering the component with `bevy_trait_query`...
+
+```rust
+struct CustomLogicPlugin;
+
+impl Plugin for CustomLogicPlugin {
+    fn build(&self, app: &mut App) {
+        // We must import this trait in order to register our components.
+        // If we don't register them, they will be invisible to the game engine.
+        use bevy_trait_query::RegisterExt;
+        app.register_component_as::<dyn LogicGate, XorGate>()
+    }
+}
+```
+
+You can use the `logic::commands` module to spawn gates and fans,
+and then connect fans with wires.
+
+```rust
+fn spawn_custom_gate(mut commands: Commands, mut sim: ResMut<LogicGraph>) {
+    let xor_gate = commands
+        .spawn_gate((Name::new("XOR"), XorGate))
+        .with_inputs(2)
+        .with_outputs(1)
+        .build();
+
+    let not_gate = commands
+        .spawn_gate((Name::new("NOT"), NotGate))
+        .with_inputs(1)
+        .with_outputs(1)
+        .build();
+
+    let wire = commands.spawn_wire(&not_gate, 0, &xor_gate, 0).downgrade();
+
+    sim.add_data(vec![xor_gate, not_gate]).add_data(wire);
+}
+```
+
 ## Bevy Compatibility
 
 | `bevy` | `bevy_logic` |

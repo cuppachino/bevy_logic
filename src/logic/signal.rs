@@ -68,3 +68,24 @@ impl std::ops::Not for Signal {
         }
     }
 }
+
+pub trait SignalExt {
+    /// Replace all signals in `self` with `signal`.
+    fn set_all(&mut self, signal: Signal);
+}
+
+impl SignalExt for Vec<Signal> {
+    fn set_all(&mut self, signal: Signal) {
+        self.iter_mut().for_each(|s| {
+            *s = signal;
+        });
+    }
+}
+
+impl SignalExt for [Signal] {
+    fn set_all(&mut self, signal: Signal) {
+        self.iter_mut().for_each(|s| {
+            *s = signal;
+        });
+    }
+}

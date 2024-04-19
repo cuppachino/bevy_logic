@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use bevy::prelude::*;
+use bevy::{ ecs::system::{ Command, EntityCommands }, prelude::* };
 
 use crate::{
     components::{ GateOutput, InputBundle, LogicGateFans, OutputBundle, Wire },
@@ -86,6 +86,63 @@ impl LogicExt for World {
     }
 }
 
+impl<'w, 's> LogicExt for Commands<'w, 's> {
+    type EntityBuilder<'a> = EntityCommands<'a> where Self: 'a;
+    type GateBuilder = Self;
+    type WireBuilder = Self;
+
+    fn spawn_gate(&mut self, bundle: impl Bundle) -> GateBuilder<'_, Self::GateBuilder> {
+        let entity = self.spawn(bundle).id();
+        GateBuilder {
+            cmd: self,
+            data: GateData {
+                entity,
+                fans: LogicGateFans::default(),
+                _state: PhantomData,
+            },
+        }
+    }
+
+    fn spawn_input(&mut self) -> Self::EntityBuilder<'_> {
+        self.spawn(InputBundle::default())
+    }
+
+    fn spawn_output(&mut self) -> Self::EntityBuilder<'_> {
+        self.spawn(OutputBundle::default())
+    }
+
+    /// Create a wire `from_gate` at `from_output` to `to_gate` at `to_input`,
+    /// then update the gate output's `wires` set with the new wire entity.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the input/output index is out of bounds, or if the input/output entity at `index` is `None`.
+    fn spawn_wire<I, O>(
+        &mut self,
+        from_gate: &GateData<I, Known>,
+        from_output: usize,
+        to_gate: &GateData<Known, O>,
+        to_input: usize
+    ) -> WireBuilder<'_, Self::WireBuilder> {
+        let from = from_gate.output(from_output);
+        let to = to_gate.input(to_input);
+        let entity = self.spawn((Signal::Undefined, Wire::new(from, to))).id();
+
+        self.add(UpdateOutputWireSet::Add { output_entity: from, wire_entity: entity });
+
+        WireBuilder {
+            cmd: self,
+            data: WireData {
+                entity,
+                from,
+                to,
+                from_gate: from_gate.id(),
+                to_gate: to_gate.id(),
+            },
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Unknown;
 
@@ -156,6 +213,16 @@ pub trait GateFanWorldMut {
 }
 impl<T> GateFanWorldMut for T where T: FnMut(&mut EntityWorldMut, usize) {
     fn modify_fan(&mut self, cmd: &mut EntityWorldMut, index: usize) {
+        self(cmd, index);
+    }
+}
+
+pub trait GateFanEntityMut {
+    fn modify_fan(&mut self, cmd: &mut EntityCommands, index: usize);
+}
+
+impl<T> GateFanEntityMut for T where T: FnMut(&mut EntityCommands, usize) {
+    fn modify_fan(&mut self, cmd: &mut EntityCommands, index: usize) {
         self(cmd, index);
     }
 }
@@ -310,6 +377,154 @@ impl<'a, I, O> GateBuilder<'a, World, I, O> {
     }
 }
 
+//* Gate builder for `Commands` */
+
+impl<'w, 's, 'a, I, O> GateBuilder<'a, Commands<'w, 's>, I, O> {
+    pub fn entity_commands(&mut self) -> EntityCommands<'_> {
+        self.cmd.entity(self.data.entity)
+    }
+
+    pub fn insert_bundle(mut self, bundle: impl Bundle) -> Self {
+        self.entity_commands().insert(bundle);
+        self
+    }
+
+    pub fn insert(&mut self, bundle: impl Bundle) -> &mut Self {
+        self.entity_commands().insert(bundle);
+        self
+    }
+}
+
+impl<'w, 's, 'a, O> GateBuilder<'a, Commands<'w, 's>, Unknown, O> {
+    pub fn with_inputs(self, count: usize) -> GateBuilder<'a, Commands<'w, 's>, Known, O> {
+        let mut inputs = Vec::with_capacity(count);
+        self.cmd.entity(self.data.entity).with_children(|gate| {
+            for _ in 0..count {
+                inputs.push(Some(gate.spawn(InputBundle::default()).id()));
+            }
+        });
+
+        GateBuilder {
+            cmd: self.cmd,
+            data: GateData {
+                entity: self.data.entity,
+                fans: LogicGateFans {
+                    inputs,
+                    outputs: self.data.fans.outputs,
+                },
+                _state: PhantomData,
+            },
+        }
+    }
+
+    /// Build `count` input entities and use `builder` on each entity. Provides
+    /// access to the input [`EntityWorldMut`] and its index in the range `0..count`.
+    pub fn build_inputs(
+        self,
+        count: usize,
+        mut builder: impl GateFanEntityMut
+    ) -> GateBuilder<'a, Commands<'w, 's>, Known, O> {
+        let mut inputs = Vec::with_capacity(count);
+
+        self.cmd.entity(self.data.entity).with_children(|gate| {
+            for i in 0..count {
+                let mut cmd = gate.spawn(InputBundle::default());
+                let input_entity = cmd.id();
+                inputs.push(Some(input_entity));
+                builder.modify_fan(&mut cmd, i);
+            }
+        });
+
+        GateBuilder {
+            cmd: self.cmd,
+            data: GateData {
+                entity: self.data.entity,
+                fans: LogicGateFans {
+                    inputs,
+                    outputs: self.data.fans.outputs,
+                },
+                _state: PhantomData,
+            },
+        }
+    }
+}
+
+impl<'w, 's, 'a, I> GateBuilder<'a, Commands<'w, 's>, I, Unknown> {
+    pub fn with_outputs(self, count: usize) -> GateBuilder<'a, Commands<'w, 's>, I, Known> {
+        let mut outputs = Vec::with_capacity(count);
+        self.cmd.entity(self.data.entity).with_children(|gate| {
+            for _ in 0..count {
+                outputs.push(Some(gate.spawn(OutputBundle::default()).id()));
+            }
+        });
+
+        GateBuilder {
+            cmd: self.cmd,
+            data: GateData {
+                entity: self.data.entity,
+                fans: LogicGateFans {
+                    inputs: self.data.fans.inputs,
+                    outputs,
+                },
+                _state: PhantomData,
+            },
+        }
+    }
+
+    /// Build `count` output entities and call `builder` on each entity. Provides
+    /// access to the output [`EntityWorldMut`] and its index in the range `0..count`.
+    pub fn build_outputs(
+        self,
+        count: usize,
+        mut builder: impl GateFanEntityMut
+    ) -> GateBuilder<'a, Commands<'w, 's>, I, Known> {
+        let mut outputs = Vec::with_capacity(count);
+
+        self.cmd.entity(self.data.entity).with_children(|gate| {
+            for i in 0..count {
+                let mut cmd = gate.spawn(OutputBundle::default());
+                let output_entity = cmd.id();
+                outputs.push(Some(output_entity));
+                builder.modify_fan(&mut cmd, i);
+            }
+        });
+
+        GateBuilder {
+            cmd: self.cmd,
+            data: GateData {
+                entity: self.data.entity,
+                fans: LogicGateFans {
+                    inputs: self.data.fans.inputs,
+                    outputs,
+                },
+                _state: PhantomData,
+            },
+        }
+    }
+}
+
+impl<'w, 's, 'a, I, O> GateBuilder<'a, Commands<'w, 's>, I, O> {
+    /// Finalize construction of the gate hierarchy, link children, and insert a [`LogicEntity`]
+    /// component into the root entity from [`Self::data`].
+    ///
+    /// Returns [`Self::data`], which can be used to wire inputs/outputs together
+    /// by their [`Entity`] IDs and link gates in a logic graph.
+    pub fn build(self) -> GateData<I, O> {
+        self.cmd
+            .entity(self.data.entity)
+            .push_children(
+                &self.data.fans
+                    .some_inputs()
+                    .into_iter()
+                    .chain(self.data.fans.some_outputs())
+                    .collect::<Vec<_>>()
+            )
+            .insert(self.data.fans.clone());
+
+        self.data
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct WireData {
     pub entity: Entity,
@@ -386,5 +601,56 @@ impl WireBuilder<'_, World> {
     pub fn insert(&mut self, bundle: impl Bundle) -> &mut Self {
         self.entity_commands().insert(bundle);
         self
+    }
+}
+
+impl<'w, 's> WireBuilder<'_, Commands<'w, 's>> {
+    /// Downgrade the builder into a [`WireData`] instance,
+    /// dropping the mutable reference to the world.
+    pub fn downgrade(self) -> WireData {
+        self.data
+    }
+
+    pub fn entity_commands(&mut self) -> EntityCommands<'_> {
+        self.cmd.entity(self.data.entity)
+    }
+
+    pub fn insert(&mut self, bundle: impl Bundle) -> &mut Self {
+        self.entity_commands().insert(bundle);
+        self
+    }
+}
+
+/// A [`Command`] that adds or removes a wire entity from a [`GateOutput`] component's `wires` set.
+///
+/// The set may be used to lookup out-going wires from a gate output entity, so it's important to
+/// keep it up-to-date when adding or removing wires.
+pub enum UpdateOutputWireSet {
+    Add {
+        output_entity: Entity,
+        wire_entity: Entity,
+    },
+    Remove {
+        output_entity: Entity,
+        wire_entity: Entity,
+    },
+}
+
+impl Command for UpdateOutputWireSet {
+    fn apply(self, world: &mut World) {
+        match self {
+            UpdateOutputWireSet::Add { output_entity, wire_entity } => {
+                world
+                    .get_mut::<GateOutput>(output_entity)
+                    .expect("output entity does not have GateOutput component")
+                    .wires.insert(wire_entity);
+            }
+            UpdateOutputWireSet::Remove { output_entity, wire_entity } => {
+                world
+                    .get_mut::<GateOutput>(output_entity)
+                    .expect("output entity does not have GateOutput component")
+                    .wires.remove(&wire_entity);
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ pub mod systems;
 pub mod components;
 pub mod resources;
 pub mod events;
+pub mod utils;
 
 #[allow(unused_imports)]
 pub mod prelude {
@@ -13,6 +14,7 @@ pub mod prelude {
     pub use crate::components::prelude::*;
     pub use crate::resources::prelude::*;
     pub use crate::events::prelude::*;
+    pub use crate::utils::*;
 
     pub use super::{ LogicSimulationPlugin, LogicReflectPlugin };
 }
