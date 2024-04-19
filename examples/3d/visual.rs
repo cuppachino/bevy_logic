@@ -1,9 +1,9 @@
 use bevy::{ prelude::*, utils::HashMap };
-use bevy_logic::{ components::{ GateFan, GateOutput, LogicFans, Wire }, logic::signal::Signal };
+use bevy_logic::{ components::{ GateFan, GateOutput, LogicGateFans, Wire }, logic::signal::Signal };
 
-pub struct GuiPlugin;
+pub struct VisualPlugin;
 
-impl Plugin for GuiPlugin {
+impl Plugin for VisualPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(PreStartup, init_logic_gate_icons).add_systems(Update, (
             colorize_logic_gates,
@@ -53,7 +53,7 @@ fn init_logic_gate_icons(mut commands: Commands, asset_server: Res<AssetServer>)
 }
 
 fn colorize_logic_gates(
-    query: Query<(&LogicFans, &Handle<StandardMaterial>)>,
+    query: Query<(&LogicGateFans, &Handle<StandardMaterial>)>,
     query_outputs: Query<&Signal, With<GateOutput>>,
     mut materials: ResMut<Assets<StandardMaterial>>
 ) {

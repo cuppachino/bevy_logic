@@ -1,5 +1,5 @@
 mod utils;
-mod gui;
+mod visual;
 mod camera_rig;
 
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -13,12 +13,12 @@ use bevy_logic::{
     prelude::*,
 };
 use camera_rig::CameraRigPlugin;
-use gui::{ GateIcon, GuiPlugin, LogicGateIcons };
+use visual::{ GateIcon, VisualPlugin, LogicGateIcons };
 
 fn main() {
     let mut app = App::new();
 
-    app.add_plugins((DefaultPlugins, WorldInspectorPlugin::new(), CameraRigPlugin, GuiPlugin))
+    app.add_plugins((DefaultPlugins, WorldInspectorPlugin::new(), CameraRigPlugin, VisualPlugin))
         .insert_resource(ClearColor(Color::rgba_linear(0.22, 0.402, 0.598, 1.0)))
         .add_plugins(LogicSimulationPlugin::default())
         .add_systems(Startup, setup)
@@ -86,6 +86,7 @@ fn setup(world: &mut World) {
         .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
         .insert_bundle(battery_bundle)
         .build();
+
     let wires = vec![
         world.spawn_wire(&not_gate_a, 0, &not_gate_a, 0).downgrade(),
         world.spawn_wire(&not_gate_a, 0, &not_gate_b, 0).downgrade(),
