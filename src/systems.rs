@@ -105,14 +105,20 @@ pub fn read_logic_events(
                 // Remove the gate from the graph.
                 sim.remove_gate(*entity);
             }
-            &LogicEvent::AddWire { from_gate, to_gate, wire_entity } => {
+            &LogicEvent::AddWire { from_gate, from_output, to_gate, wire_entity } => {
                 sim.add_wire(from_gate, to_gate, wire_entity);
+
+                // Try to update the wires Set in the [`GateOutput`].
+                let Ok(mut output) = gate_outputs.get_mut(from_gate) else {
+                    continue;
+                };
+                output.wires.insert(wire_entity);
             }
             &LogicEvent::RemoveWire { from_gate, to_gate, wire_entity } => {
                 // Try to update the wires Set in [`GateOutput`]s
                 // of all incoming wires in the world, if the gate still exists.
                 let Ok(mut output) = gate_outputs.get_mut(from_gate) else {
-                    return;
+                    continue;
                 };
                 output.wires.remove(&wire_entity);
 

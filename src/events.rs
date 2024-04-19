@@ -56,13 +56,19 @@ pub enum LogicEvent {
     /// Add a wire to the [`LogicGraph`] by linking two gate entities.
     ///
     /// This does not spawn a new entity with a [`Wire`] component.
+    ///
+    /// This event adds an edge between two gates in the graph and
+    /// updates the wire Sets stored in [`GateOutput`] components.
     AddWire {
         from_gate: Entity,
+        from_output: Entity,
         to_gate: Entity,
         wire_entity: Entity,
     },
 
     /// Add a wire to the [`LogicGraph`] using an existing entity with a [`Wire`] component.
+    ///
+    /// This will also update wire sets stored in [`GateOutput`] components.
     AddWireByEntity(Entity),
 
     /// Remove a wire from the [`LogicGraph`] by the entities that define it.
