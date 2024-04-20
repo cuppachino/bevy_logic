@@ -67,16 +67,7 @@ impl LogicGraph {
     }
 
     pub fn compile(&mut self) {
-        let post_order = kosaraju_scc(&self.graph);
-
-        // Assert that all vecs contain a single element.
-        #[cfg(debug_assertions)]
-        for component in post_order.iter() {
-            assert_eq!(component.len(), 1);
-        }
-
-        // flatten the vec of vecs into a single vec
-        self.sorted = post_order.into_iter().flatten().rev().collect();
+        self.sorted = kosaraju_scc(&self.graph).into_iter().flatten().rev().collect();
     }
 
     pub fn sorted(&self) -> &[Entity] {
