@@ -19,7 +19,7 @@ A logic gate simulation plugin for [`bevy`](https://bevyengine.org/).
 ### Running examples
 
 ```cmd
-cargo run --release --example 3d
+cargo run --release --example cycles
 ```
 
 ### Quickstart
@@ -73,7 +73,7 @@ impl Plugin for CustomLogicPlugin {
 ```
 
 You can use the `logic::commands` module to spawn gates and fans,
-and then connect fans with wires.
+and then connect fans with wires. Make sure to `compile()` the logic graph.
 
 ```rust
 fn spawn_custom_gate(mut commands: Commands, mut sim: ResMut<LogicGraph>) {
@@ -99,4 +99,4 @@ fn spawn_custom_gate(mut commands: Commands, mut sim: ResMut<LogicGraph>) {
 
 | `bevy` | `bevy_logic` |
 | ------ | ------------ |
-| 0.13   | 0.1.1        |
+| 0.13.2 | 0.2.x        |
