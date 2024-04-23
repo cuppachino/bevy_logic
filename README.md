@@ -44,7 +44,7 @@ use bevy_logic::prelude::*;
 pub struct XorGate;
 
 impl LogicGate for XorGate {
-    fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]) {
+    fn evaluate(&mut self, inputs: &[Signal], outputs: &mut [Signal]) {
         let signal: Signal = inputs
             .iter()
             .filter(|s| s.is_true())
