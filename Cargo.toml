@@ -27,6 +27,11 @@ bevy = "0.13.2"
 bevy-inspector-egui = "0.24"
 bevy_mod_picking = "0.18.2"
 leafwing-input-manager = "0.13.3"
+itertools = "0.12.1"
+i_float = "0.10.0"
+i_overlay = "0.25.0"
+i_triangle = "0.20.0"
+i_shape = "0.16.0"
 
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:

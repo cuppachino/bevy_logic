@@ -819,6 +819,11 @@ dependencies = [
  "bevy_mod_picking",
  "derive-new",
  "derive_more",
+ "i_float",
+ "i_overlay",
+ "i_shape",
+ "i_triangle",
+ "itertools",
  "leafwing-input-manager",
 ]
 
@@ -2466,6 +2471,54 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3d1354bf6b7235cb4a0576c2619fd4ed18183f689b12b006a0ee7329eeff9a5"
 dependencies = [
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "i_float"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8ab8122fa1e2eec94a3a47ab66ead50495a6c858be31cfc87dbcfe412cea33f"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "i_overlay"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "337b9eb13475acffd30cf823b8e2b869bbf694fef786386fcce3c060d63efd42"
+dependencies = [
+ "i_float",
+ "i_shape",
+ "i_tree",
+]
+
+[[package]]
+name = "i_shape"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47b3e64b6b8043e7a98679c7131bbc4a7b54b1cbf7772e371b26b32b1665fa0a"
+dependencies = [
+ "i_float",
+ "serde",
+]
+
+[[package]]
+name = "i_tree"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9e82c454fd28dbea96973cecd400fc54948f445fa02b2f431dd3fe86ec60413"
+
+[[package]]
+name = "i_triangle"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e33428f19f88ca2135a0832d0915f20c6774c3969123d1bdbd55adc72ce5691c"
+dependencies = [
+ "i_float",
+ "i_overlay",
+ "i_shape",
+ "serde",
 ]
 
 [[package]]
