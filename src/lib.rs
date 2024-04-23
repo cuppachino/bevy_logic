@@ -10,7 +10,6 @@ pub mod utils;
 #[allow(unused_imports)]
 pub mod prelude {
     pub use crate::logic::prelude::*;
-    pub use crate::systems::prelude::*;
     pub use crate::components::prelude::*;
     pub use crate::resources::prelude::*;
     pub use crate::events::prelude::*;
@@ -44,6 +43,8 @@ pub struct LogicReflectPlugin;
 
 impl Plugin for LogicReflectPlugin {
     fn build(&self, app: &mut App) {
+        app.register_type::<Time<logic::schedule::LogicStep>>();
+
         app.register_type::<logic::signal::Signal>()
             .register_type::<components::Wire>()
             .register_type::<components::GateFan>()

@@ -8,14 +8,12 @@ use crate::{
     resources::LogicGraph,
 };
 
-pub mod prelude {}
-
 /// A system that evaluates the [`LogicGraph`] resource and updates all entities in a single step.
 ///
 /// This propagates signals through [`Signal`] and [`Wire`] components.
 pub fn step_logic(
     logic_graph: Res<LogicGraph>,
-    logic_entities: Query<(&LogicGateFans, One<&dyn LogicGate>)>,
+    mut logic_entities: Query<(&LogicGateFans, One<&mut dyn LogicGate>)>,
     gate_outputs: Query<&GateOutput>,
     mut gate_fans: Query<&mut Signal, With<GateFan>>,
     mut wires: Query<(&mut Signal, &Wire), Without<GateFan>>
@@ -24,8 +22,8 @@ pub fn step_logic(
 
     for &entity in sorted.iter() {
         // Get the GATE.
-        let (fans, gate) = logic_entities
-            .get(entity)
+        let (fans, mut gate) = logic_entities
+            .get_mut(entity)
             .expect("Entity does not exist or does not have a LogicFans/LogicGate");
 
         // Collect its fan input signals.

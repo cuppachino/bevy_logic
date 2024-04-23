@@ -21,12 +21,36 @@ impl Signal {
     pub const NEG: Signal = Signal::Analog(-1.0);
 
     /// Returns true if the signal is true or greater or equal to 1.0.
-    pub fn is_true(&self) -> bool {
+    pub fn is_truthy(&self) -> bool {
         match self {
             Signal::Digital(true) => true,
             Signal::Analog(value) => *value >= 1.0,
             _ => false,
         }
+    }
+
+    /// Returns true if the signal is false, less than 1.0, or undefined.
+    pub fn is_falsy(&self) -> bool {
+        match self {
+            Signal::Digital(true) => false,
+            Signal::Analog(value) => *value < 1.0,
+            _ => true,
+        }
+    }
+
+    /// Set the signal to `Digital(false)`.
+    pub fn turn_off(&mut self) {
+        *self = Signal::OFF;
+    }
+
+    // Set the signal to `Digital(true)`.
+    pub fn turn_on(&mut self) {
+        *self = Signal::ON;
+    }
+
+    /// Replace self with a new signal.
+    pub fn replace(&mut self, new: Self) {
+        *self = new;
     }
 }
 

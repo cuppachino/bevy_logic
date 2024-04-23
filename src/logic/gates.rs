@@ -63,7 +63,7 @@ impl Battery {
 }
 
 impl LogicGate for Battery {
-    fn evaluate(&self, _: &[Signal], outputs: &mut [Signal]) {
+    fn evaluate(&mut self, _: &[Signal], outputs: &mut [Signal]) {
         outputs.iter_mut().for_each(|output_signal| {
             *output_signal = self.signal;
         });
@@ -85,8 +85,8 @@ impl LogicGate for Battery {
 pub struct AndGate;
 
 impl LogicGate for AndGate {
-    fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]) {
-        let signal: Signal = inputs.iter().all(Signal::is_true).into();
+    fn evaluate(&mut self, inputs: &[Signal], outputs: &mut [Signal]) {
+        let signal: Signal = inputs.iter().all(Signal::is_truthy).into();
         outputs.set_all(signal);
     }
 }
@@ -104,8 +104,8 @@ impl LogicGate for AndGate {
 pub struct NotGate;
 
 impl LogicGate for NotGate {
-    fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]) {
-        let signal: Signal = (!inputs.iter().all(Signal::is_true)).into();
+    fn evaluate(&mut self, inputs: &[Signal], outputs: &mut [Signal]) {
+        let signal: Signal = (!inputs.iter().all(Signal::is_truthy)).into();
         outputs.set_all(signal);
     }
 }
@@ -137,11 +137,11 @@ impl OrGate {
 }
 
 impl LogicGate for OrGate {
-    fn evaluate(&self, inputs: &[Signal], outputs: &mut [Signal]) {
+    fn evaluate(&mut self, inputs: &[Signal], outputs: &mut [Signal]) {
         let signal = if self.is_adder {
             inputs.iter().fold(Signal::OFF, |acc, input| { acc + *input })
         } else {
-            inputs.iter().any(Signal::is_true).into()
+            inputs.iter().any(Signal::is_truthy).into()
         };
 
         let signal = if self.invert_output { !signal } else { signal };
@@ -151,8 +151,6 @@ impl LogicGate for OrGate {
 }
 
 /// The XOR gate emits a signal if the number of true inputs is odd.
-///
-/// In other words, if there are an odd number of truthy inputs, the output is true.
 ///
 /// ```md
 /// Truth table:
@@ -167,10 +165,10 @@ impl LogicGate for OrGate {
 pub struct XorGate;
 
 impl LogicGate for XorGate {
-    fn evaluate(&self, inputs: &[super::signal::Signal], outputs: &mut [super::signal::Signal]) {
+    fn evaluate(&mut self, inputs: &[Signal], outputs: &mut [Signal]) {
         let signal: Signal = inputs
             .iter()
-            .filter(|s| s.is_true())
+            .filter(|s| s.is_truthy())
             .count()
             .is_odd()
             .into();

@@ -4,7 +4,7 @@ use derive_new::new;
 use crate::logic::signal::Signal;
 
 pub mod prelude {
-    pub use super::{ LogicGateFans, GateInput, GateOutput, OutputBundle };
+    pub use super::{ LogicGateFans, GateInput, GateOutput, InputBundle, OutputBundle };
 }
 
 /// A connection between two nodes.

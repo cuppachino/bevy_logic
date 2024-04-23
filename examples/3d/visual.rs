@@ -64,7 +64,7 @@ fn colorize_logic_gates(
             .iter()
             .any(|output| {
                 let signal = query_outputs.get(*output).unwrap();
-                signal.is_true()
+                signal.is_truthy()
             });
 
         let color = if is_active { Color::WHITE } else { Color::GRAY };
@@ -87,7 +87,7 @@ fn gizmo_wires(
             continue;
         };
 
-        let color = if signal.is_true() { Color::GREEN } else { Color::BLACK };
+        let color = if signal.is_truthy() { Color::GREEN } else { Color::BLACK };
 
         gizmos.line(from, to, color);
         gizmos.circle(from, Direction3d::Z, 0.1, color);

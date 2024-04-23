@@ -22,6 +22,16 @@ A logic gate simulation plugin for [`bevy`](https://bevyengine.org/).
 cargo run --release --example 3d
 ```
 
+### Quickstart
+
+Add the `LogicSimulationPlugin` to your app, and configure the `Time<LogicStep>` resource
+to tick at the desired speed.
+
+```rust
+app.add_plugins(LogicSimulationPlugin)
+    .insert_resource(Time::<LogicStep>::from_seconds(0.5));
+```
+
 ### Custom logic gates
 
 You can create your own logic gates by implementing the `LogicGate` trait...
@@ -81,7 +91,7 @@ fn spawn_custom_gate(mut commands: Commands, mut sim: ResMut<LogicGraph>) {
 
     let wire = commands.spawn_wire(&not_gate, 0, &xor_gate, 0).downgrade();
 
-    sim.add_data(vec![xor_gate, not_gate]).add_data(wire);
+    sim.add_data(vec![xor_gate, not_gate]).add_data(wire).compile();
 }
 ```
 

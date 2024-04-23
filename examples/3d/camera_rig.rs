@@ -49,21 +49,12 @@ pub fn spawn_camera_rig(mut commands: Commands) {
         ))
         .with_children(|rig| {
             joint_entity = rig
-                .spawn((CameraJoint, SpatialBundle::default()))
+                .spawn((
+                    CameraJoint,
+                    SpatialBundle::from_transform(Transform::from_xyz(0.0, 0.0, 10.0)),
+                ))
                 .with_children(|joint| {
-                    camera_entity = joint
-                        .spawn((
-                            PrimaryCamera,
-                            Camera3dBundle {
-                                transform: Transform::from_xyz(0.0, 0.0, 10.0),
-                                projection: Projection::Perspective(PerspectiveProjection {
-                                    fov: (50.5_f32).to_radians(),
-                                    ..default()
-                                }),
-                                ..default()
-                            },
-                        ))
-                        .id();
+                    camera_entity = joint.spawn((PrimaryCamera, Camera3dBundle::default())).id();
                 })
                 .id();
         })
