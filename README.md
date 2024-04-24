@@ -100,4 +100,4 @@ fn spawn_custom_gate(mut commands: Commands, mut sim: ResMut<LogicGraph>) {
 
 | `bevy` | `bevy_logic` |
 | ------ | ------------ |
-| 0.13.2 | 0.2.x        |
+| 0.13.2 | 0.3.x        |
