@@ -119,7 +119,7 @@ fn setup(world: &mut World) {
         .compile();
 }
 
-/// Returns a function that inserts a `Transform` component into the [`GateFan`] entity.
+/// Returns a function that inserts a [`SpatialBundle`] into the [`GateFan`] entity.
 ///
 /// The `kind` parameter determines the side of the gate the fan is on.
 /// The `len` parameter describes the total number of fans on the side.
@@ -142,7 +142,7 @@ fn gate_fan(kind: GateFan, len: usize, height: f32) -> impl GateFanWorldMut {
             -1.0 * (section_height * ((1 + index) as f32) - half_height),
             0.0
         );
-        cmd.insert(Transform::from_translation(position));
+        cmd.insert(SpatialBundle::from_transform(Transform::from_translation(position)));
     }
 }
 
