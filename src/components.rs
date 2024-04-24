@@ -116,6 +116,7 @@ pub struct GateInput;
 /// the [`Entity`] IDs of out-going wires.
 #[derive(Component, Default)]
 pub struct GateOutput {
+    /// Holds [Entity] ids to outgoing wires.
     pub wires: EntityHashSet,
 }
 

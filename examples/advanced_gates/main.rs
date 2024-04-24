@@ -1,6 +1,6 @@
 use bevy::{ ecs::system::EntityCommands, prelude::* };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_logic::{ components::GateFan, logic::commands::GateFanEntityMut, prelude::* };
+use bevy_logic::{ components::GateFan, logic::builder::GateFanEntityMut, prelude::* };
 use itertools::Itertools;
 
 mod camera_rig;

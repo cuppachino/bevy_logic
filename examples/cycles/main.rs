@@ -6,10 +6,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy::prelude::*;
 use bevy_logic::{
     components::GateFan,
-    logic::{
-        commands::{ GateFanWorldMut, LogicExt },
-        gates::{ AndGate, Battery, NotGate, OrGate },
-    },
+    logic::{ builder::{ GateFanWorldMut, LogicExt }, gates::{ AndGate, Battery, NotGate, OrGate } },
     prelude::*,
 };
 use camera_rig::CameraRigPlugin;

@@ -1,10 +1,10 @@
 pub mod signal;
 pub mod gates;
-pub mod commands;
+pub mod builder;
 pub mod schedule;
 
 pub mod prelude {
-    pub use super::commands::LogicExt;
+    pub use super::builder::LogicExt;
     pub use super::gates::*;
     pub use super::schedule::prelude::*;
     pub use super::signal::{ Signal, SignalExt };
