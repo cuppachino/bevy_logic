@@ -811,7 +811,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_logic"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",

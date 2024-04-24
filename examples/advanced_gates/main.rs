@@ -153,14 +153,20 @@ fn selector_input_entity_mut(total_inputs: usize) -> impl GateFanEntityMut {
     move |cmd: &mut EntityCommands, index: usize| {
         if index == 0 {
             let position = Vec3::new(0.0, -half_height, 0.0);
-            cmd.insert((Transform::from_translation(position), Name::new("in.cycle")));
+            cmd.insert((
+                Name::new("in.cycle"),
+                SpatialBundle::from_transform(Transform::from_translation(position)),
+            ));
         } else {
             let position = Vec3::new(
                 -GATE_UNIT_HALF_SIZE,
                 -1.0 * (section_height * (index as f32) - half_height),
                 0.0
             );
-            cmd.insert((Transform::from_translation(position), Name::new(format!("in.{index}"))));
+            cmd.insert((
+                Name::new(format!("in.{index}")),
+                SpatialBundle::from_transform(Transform::from_translation(position)),
+            ));
         }
     }
 }
@@ -180,7 +186,7 @@ fn fan_entity_mut(kind: GateFan, num_ports: usize) -> impl GateFanEntityMut {
             -1.0 * (section_height * ((1 + index) as f32) - half_height),
             0.0
         );
-        cmd.insert(Transform::from_translation(position));
+        cmd.insert(SpatialBundle::from_transform(Transform::from_translation(position)));
     }
 }
 
