@@ -1,12 +1,10 @@
 use std::marker::PhantomData;
-
-use bevy::{ ecs::system::{ Command, EntityCommands }, prelude::* };
-
+use bevy::{ ecs::system::EntityCommands, prelude::* };
 use crate::{
-    components::{ GateOutput, InputBundle, LogicGateFans, OutputBundle, Wire },
-    logic::signal::Signal,
+    commands::UpdateOutputWireSet, components::{ GateOutput, InputBundle, LogicGateFans, OutputBundle, Wire }, logic::signal::Signal
 };
 
+/// A builder trait that helps construct logic gate hierarchies and wires.
 pub trait LogicExt {
     type EntityBuilder<'a> where Self: 'a;
     type GateBuilder;
@@ -207,7 +205,7 @@ pub struct GateBuilder<'a, T, I = Unknown, O = Unknown> {
     data: GateData<I, O>,
 }
 
-/// A trait that provides mutable access to an [`EntityWorldMut`] and its index in the range `0..count`.
+/// A trait that provides mutable access to an [`EntityWorldMut`] and its child index in the range `0..count`.
 pub trait GateFanWorldMut {
     fn modify_fan(&mut self, cmd: &mut EntityWorldMut, index: usize);
 }
@@ -621,36 +619,4 @@ impl<'w, 's> WireBuilder<'_, Commands<'w, 's>> {
     }
 }
 
-/// A [`Command`] that adds or removes a wire entity from a [`GateOutput`] component's `wires` set.
-///
-/// The set may be used to lookup out-going wires from a gate output entity, so it's important to
-/// keep it up-to-date when adding or removing wires.
-pub enum UpdateOutputWireSet {
-    Add {
-        output_entity: Entity,
-        wire_entity: Entity,
-    },
-    Remove {
-        output_entity: Entity,
-        wire_entity: Entity,
-    },
-}
 
-impl Command for UpdateOutputWireSet {
-    fn apply(self, world: &mut World) {
-        match self {
-            UpdateOutputWireSet::Add { output_entity, wire_entity } => {
-                world
-                    .get_mut::<GateOutput>(output_entity)
-                    .expect("output entity does not have GateOutput component")
-                    .wires.insert(wire_entity);
-            }
-            UpdateOutputWireSet::Remove { output_entity, wire_entity } => {
-                world
-                    .get_mut::<GateOutput>(output_entity)
-                    .expect("output entity does not have GateOutput component")
-                    .wires.remove(&wire_entity);
-            }
-        }
-    }
-}

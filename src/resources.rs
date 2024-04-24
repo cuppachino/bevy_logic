@@ -1,6 +1,6 @@
 use bevy::{ prelude::*, utils::petgraph::{ algo::kosaraju_scc, graphmap::DiGraphMap } };
 
-use crate::{ components::Wire, logic::commands::{ GateData, WireData } };
+use crate::{ components::Wire, logic::builder::{ GateData, WireData } };
 
 pub mod prelude {
     pub use super::LogicGraph;
@@ -28,26 +28,37 @@ impl LogicGraph {
     }
 
     /// Add a gate to the graph.
-    pub fn add_gate(&mut self, gate_entity: Entity) {
+    pub fn add_gate(&mut self, gate_entity: Entity) -> &mut Self {
         self.graph.add_node(gate_entity);
+        self
     }
 
     /// Connect two gates with a wire.
-    pub fn add_wire(&mut self, from_gate: Entity, to_gate: Entity, wire_entity: Entity) {
+    pub fn add_wire(
+        &mut self,
+        from_gate: Entity,
+        to_gate: Entity,
+        wire_entity: Entity
+    ) -> &mut Self {
         self.graph.add_edge(from_gate, to_gate, wire_entity);
+        self
     }
 
     /// Remove a gate from the graph.
-    pub fn remove_gate(&mut self, gate_entity: Entity) {
+    pub fn remove_gate(&mut self, gate_entity: Entity) -> &mut Self {
         self.graph.remove_node(gate_entity);
+        self
     }
 
     /// Remove a wire from the graph.
-    pub fn remove_wire(&mut self, from_gate: Entity, to_gate: Entity) {
+    pub fn remove_wire(&mut self, from_gate: Entity, to_gate: Entity) -> &mut Self {
         self.graph.remove_edge(from_gate, to_gate);
+        self
     }
 
     /// Returns an iterator over all incoming wires to a gate.
+    ///
+    /// The tuple represents `(wire_entity, Wire { from, to })`.
     pub fn iter_incoming_wires(&self, gate: Entity) -> impl Iterator<Item = (Entity, Wire)> + '_ {
         self.graph
             .edges_directed(gate, bevy::utils::petgraph::Direction::Incoming)

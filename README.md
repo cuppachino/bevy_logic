@@ -10,11 +10,12 @@ A logic gate simulation plugin for [`bevy`](https://bevyengine.org/).
 ## Features
 
 - A `LogicGraph` resource for sorting (potentially cyclic) logic gate circuits.
-- A separate `LogicUpdate` schedule with a fixed timestep.
-- `LogicGate` trait queries.
-- `World` and `Commands` extensions for spawning and removing logic gates and child fans.
-- Events for `LogicGraph` simulation synchronization.
-- Modular plugin design. Pick and choose the features you need.
+- A fixed timestep `LogicUpdate` schedule that works just like bevy's `FixedUpdate`.
+- A ternary approach to [`Signal`](src/logic/signal.rs), enabling non-boolean circuits and analog machines.
+- [`LogicGate`](src/logic/mod.rs) trait queries.
+- Builder traits for `World` and `Commands` that ease gate hierarchy construction.
+- `Command`s for synchronizing a graph with the game world.
+- Modular plugin design. Pick and choose which features you need.
 
 ### Running examples
 
@@ -39,7 +40,7 @@ You can create your own logic gates by implementing the `LogicGate` trait...
 ```rust
 use bevy_logic::prelude::*;
 
-/// The XOR gate emits a signal if the number of true inputs is odd.
+/// The XOR gate emits a signal if the number of "truthy" inputs is odd.
 #[derive(Component, Clone, Copy, Debug, Default, Reflect)]
 pub struct XorGate;
 
@@ -47,7 +48,7 @@ impl LogicGate for XorGate {
     fn evaluate(&mut self, inputs: &[Signal], outputs: &mut [Signal]) {
         let signal: Signal = inputs
             .iter()
-            .filter(|s| s.is_true())
+            .filter(|s| s.is_truthy())
             .count()
             .is_odd()
             .into();

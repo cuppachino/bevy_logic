@@ -4,7 +4,7 @@ pub mod logic;
 pub mod systems;
 pub mod components;
 pub mod resources;
-pub mod events;
+pub mod commands;
 pub mod utils;
 
 #[allow(unused_imports)]
@@ -12,7 +12,7 @@ pub mod prelude {
     pub use crate::logic::prelude::*;
     pub use crate::components::prelude::*;
     pub use crate::resources::prelude::*;
-    pub use crate::events::prelude::*;
+    pub use crate::commands::prelude::*;
     pub use crate::utils::*;
 
     pub use super::{ LogicSimulationPlugin, LogicReflectPlugin };
@@ -26,12 +26,7 @@ impl Plugin for LogicSimulationPlugin {
     fn build(&self, app: &mut App) {
         use prelude::*;
 
-        app.add_plugins((
-            LogicSchedulePlugin,
-            LogicReflectPlugin,
-            LogicGatePlugin,
-            LogicEventPlugin,
-        ))
+        app.add_plugins((LogicSchedulePlugin, LogicReflectPlugin, LogicGatePlugin))
             .insert_resource(Time::<LogicStep>::from_seconds(0.5))
             .init_resource::<LogicGraph>()
             .add_systems(LogicUpdate, systems::step_logic.in_set(LogicSystemSet::StepLogic));
