@@ -65,10 +65,7 @@ struct CustomLogicPlugin;
 
 impl Plugin for CustomLogicPlugin {
     fn build(&self, app: &mut App) {
-        // We must import this trait in order to register our components.
-        // If we don't register them, they will be invisible to the game engine.
-        use bevy_trait_query::RegisterExt;
-        app.register_component_as::<dyn LogicGate, XorGate>()
+        app.register_logic_gate::<XorGate>();
     }
 }
 ```
