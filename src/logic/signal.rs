@@ -24,7 +24,7 @@ impl Signal {
     pub fn is_truthy(&self) -> bool {
         match self {
             Signal::Digital(true) => true,
-            Signal::Analog(value) => *value >= 1.0,
+            Signal::Analog(value) => value.is_normal(),
             _ => false,
         }
     }
@@ -33,7 +33,7 @@ impl Signal {
     pub fn is_falsy(&self) -> bool {
         match self {
             Signal::Digital(true) => false,
-            Signal::Analog(value) => *value < 1.0,
+            Signal::Analog(value) => !value.is_normal(),
             _ => true,
         }
     }
@@ -71,11 +71,42 @@ impl std::ops::Add for Signal {
 
 impl std::ops::Add<f32> for Signal {
     type Output = Self;
+
     fn add(self, rhs: f32) -> Self::Output {
         match self {
             Signal::Analog(value) => Signal::Analog(value + rhs),
             Signal::Digital(true) => Signal::Analog(1.0 + rhs),
             Signal::Digital(false) => Signal::Analog(rhs),
+            Signal::Undefined => Signal::Undefined,
+        }
+    }
+}
+
+impl std::ops::Sub for Signal {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Signal::Undefined, _) | (_, Signal::Undefined) => Signal::Undefined,
+            (Signal::Analog(lhs), Signal::Analog(rhs)) => Signal::Analog(lhs - rhs),
+            (Signal::Analog(a), Signal::Digital(true)) => Signal::Analog(a - 1.0),
+            (Signal::Analog(a), Signal::Digital(false)) => Signal::Analog(a),
+            (Signal::Digital(true), Signal::Analog(a)) => Signal::Analog(1.0 - a),
+            (Signal::Digital(false), Signal::Analog(a)) => Signal::Analog(-a),
+            (Signal::Digital(true), Signal::Digital(false)) => Signal::Digital(true),
+            _ => Signal::Digital(false),
+        }
+    }
+}
+
+impl std::ops::Sub<f32> for Signal {
+    type Output = Self;
+
+    fn sub(self, rhs: f32) -> Self::Output {
+        match self {
+            Signal::Analog(value) => Signal::Analog(value - rhs),
+            Signal::Digital(true) => Signal::Analog(1.0 - rhs),
+            Signal::Digital(false) => Signal::Analog(-rhs),
             Signal::Undefined => Signal::Undefined,
         }
     }

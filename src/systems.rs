@@ -23,7 +23,7 @@ pub fn step_logic(
         // Get the GATE.
         let (fans, mut gate) = logic_entities
             .get_mut(entity)
-            .expect("Entity does not exist or does not have a LogicFans/LogicGate");
+            .expect("Entity does not exist or does not have a LogicGateFans or dyn LogicGate");
 
         // Collect its fan input signals.
         let input_signals = fans.inputs

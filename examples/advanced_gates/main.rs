@@ -75,8 +75,7 @@ fn main() {
     let mut app = App::new();
 
     // Register the `Selector` as a `LogicGate`.
-    use bevy_trait_query::RegisterExt;
-    app.register_component_as::<dyn LogicGate, Selector>();
+    app.register_logic_gate::<Selector>();
 
     // Add the `LogicSimulationPlugin`.
     app.add_plugins((

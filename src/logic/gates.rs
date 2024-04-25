@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{ logic::{ signal::Signal, LogicGate }, utils::NumExt };
 
-use super::signal::SignalExt;
+use super::{ signal::SignalExt, AppLogicGateExt };
 
 /// This plugin registers basic logic gates and a battery component.
 ///
@@ -20,14 +20,11 @@ pub struct LogicGatePlugin;
 
 impl Plugin for LogicGatePlugin {
     fn build(&self, app: &mut App) {
-        // We must import this trait in order to register our components.
-        // If we don't register them, they will be invisible to the game engine.
-        use bevy_trait_query::RegisterExt;
-        app.register_component_as::<dyn LogicGate, AndGate>()
-            .register_component_as::<dyn LogicGate, OrGate>()
-            .register_component_as::<dyn LogicGate, NotGate>()
-            .register_component_as::<dyn LogicGate, XorGate>()
-            .register_component_as::<dyn LogicGate, Battery>();
+        app.register_logic_gate::<AndGate>()
+            .register_logic_gate::<OrGate>()
+            .register_logic_gate::<NotGate>()
+            .register_logic_gate::<XorGate>()
+            .register_logic_gate::<Battery>();
 
         // Register the components' reflection data.
         app.register_type::<AndGate>()
