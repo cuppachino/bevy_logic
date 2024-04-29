@@ -251,7 +251,7 @@ mod systems {
             ..Default::default()
         });
 
-        // Create a selector with 5 states (and one cycle input).
+        // Create a Selector with 5 states (and one cycle input).
         let selector = helpers::spawn_selector(
             &mut commands,
             &mut meshes,
@@ -290,10 +290,7 @@ mod systems {
             Vec2::new(3.0, -3.0)
         );
 
-        // Spawn the keypad.
-        let keypad = helpers::spawn_keypad_ui(&mut commands);
-
-        // Spawn "one-shot" counters - counters that count to 1 and then reset.
+        // Spawn "one-shot" Counters - Counters that count to 1 and then reset.
         let counter_a = helpers::spawn_counter(
             &mut commands,
             &mut meshes,
@@ -323,6 +320,42 @@ mod systems {
             Vec2::new(1.0, -2.0)
         );
         sim.add_data(commands.spawn_wire(&counter_d, 0, &counter_d, 0).downgrade());
+
+        // Spawn the keypad.
+        let keypad = helpers::spawn_keypad_ui(&mut commands);
+
+        // Spawn a "reset" button wired to the first state of the Selector.
+        let reset_button = commands
+            .spawn((
+                camera_rig::UiWorldPosition::default(),
+                OutputBundle::default(),
+                NoEvalOutput,
+                ButtonBundle {
+                    background_color: Color::GRAY.into(),
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(20.0),
+                        bottom: Val::Px(20.0),
+                        padding: UiRect::axes(Val::Px(24.0), Val::Px(8.0)),
+                        align_items: AlignItems::Center,
+                        align_content: AlignContent::Center,
+                        justify_content: JustifyContent::Center,
+                        justify_items: JustifyItems::Center,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+            ))
+            .with_children(|button| {
+                button.spawn(
+                    TextBundle::from_section("RESET", TextStyle {
+                        font_size: 32.0,
+                        ..default()
+                    })
+                );
+            })
+            .id();
+        commands.spawn_no_eval_wire(reset_button, selector.input(1)); // button out.0 -> selector std.in 0
 
         // Our UI button's don't take any inputs, do not need evaluation, and
         // do not need to be sorted by the [`LogicGraph`]. We'll wire each keypad
@@ -440,6 +473,7 @@ mod helpers {
                 for (i, entity) in entities.iter_mut().enumerate() {
                     *entity = root
                         .spawn((
+                            camera_rig::UiWorldPosition::default(),
                             OutputBundle::default(),
                             NoEvalOutput,
                             ButtonBundle {
