@@ -48,9 +48,58 @@ impl Signal {
         *self = Signal::ON;
     }
 
-    /// Replace self with a new signal.
+    /// Replace self with a new signal if the new signal is not equal.
+    ///
+    /// This is useful for preventing unnecessary changes from triggering
+    /// bevy's change detection.
     pub fn replace(&mut self, new: Self) {
-        *self = new;
+        if new != *self {
+            *self = new;
+        }
+    }
+
+    /// Returns true if the signal is "truthy", [`Analog`] and negative.
+    ///
+    /// [`Analog`]: Signal::Analog
+    pub fn is_sign_negative(&self) -> bool {
+        match self {
+            Self::Analog(value) => value.is_sign_negative(),
+            _ => false,
+        }
+    }
+
+    /// Returns true if the signal is "truthy", [`Analog`] and positive
+    ///
+    /// [`Analog`]: Signal::Analog
+    pub fn is_sign_positive(&self) -> bool {
+        match self {
+            Self::Analog(value) => value.is_sign_positive(),
+            _ => false,
+        }
+    }
+
+    /// Returns `true` if the signal is [`Analog`].
+    ///
+    /// [`Analog`]: Signal::Analog
+    #[must_use]
+    pub fn is_analog(&self) -> bool {
+        matches!(self, Self::Analog(..))
+    }
+
+    /// Returns `true` if the signal is [`Digital`].
+    ///
+    /// [`Digital`]: Signal::Digital
+    #[must_use]
+    pub fn is_digital(&self) -> bool {
+        matches!(self, Self::Digital(..))
+    }
+
+    /// Returns `true` if the signal is [`Undefined`].
+    ///
+    /// [`Undefined`]: Signal::Undefined
+    #[must_use]
+    pub fn is_undefined(&self) -> bool {
+        matches!(self, Self::Undefined)
     }
 }
 

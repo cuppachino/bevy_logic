@@ -4,14 +4,34 @@ use derive_new::new;
 use crate::logic::signal::Signal;
 
 pub mod prelude {
-    pub use super::{ LogicGateFans, GateInput, GateOutput, InputBundle, OutputBundle };
+    pub use super::{
+        Wire,
+        WireBundle,
+        LogicGateFans,
+        GateFan,
+        GateInput,
+        GateOutput,
+        InputBundle,
+        OutputBundle,
+        NoEvalOutput,
+    };
 }
 
-/// A connection between two nodes.
+/// A component that connects two logic gates with the entity IDs
+/// of their child fans.
 #[derive(new, Component, Clone, Copy, Debug, Reflect)]
 pub struct Wire {
+    /// The [`GateOutput`] entity.
     pub from: Entity,
+    /// The [`GateInput`] entity.
     pub to: Entity,
+}
+
+/// A bundle used to create a wire between a [`GateOutput`] and [`GateInput`].
+#[derive(Bundle, Clone, Copy)]
+pub struct WireBundle {
+    pub wire: Wire,
+    pub signal: Signal,
 }
 
 /// Marks an entity as a logic gate entity, and stores the
@@ -119,6 +139,19 @@ pub struct GateOutput {
     /// Holds [Entity] ids to outgoing wires.
     pub wires: EntityHashSet,
 }
+
+/// Marks an entity as an output that does not require
+/// evaluation. If the entity includes an [`OutputBundle`],
+/// it's [`Signal`] will be propagated to all connected wires
+/// when changed.
+///
+/// This is useful for "gates" that do not have any inputs,
+/// such as buttons and interactive gameplay elements that can
+/// ONLY output a signal.
+///
+/// See the `advanced_gates` example.
+#[derive(Component, Default)]
+pub struct NoEvalOutput;
 
 /// A bundle that can be used to create a child
 /// **input** node of a logic gate entity.

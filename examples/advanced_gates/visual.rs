@@ -1,7 +1,7 @@
 use bevy::{ prelude::*, render::{ mesh::PrimitiveTopology, render_asset::RenderAssetUsages } };
-use bevy_logic::{ components::{ GateFan, Wire }, prelude::* };
+use bevy_logic::prelude::*;
 
-use crate::{ triangulation::*, GATE_UNIT_HALF_THICKNESS, GATE_UNIT_SIZE };
+use crate::{ helpers::*, triangulation::* };
 
 pub fn gizmo_wires(
     mut gizmos: Gizmos,

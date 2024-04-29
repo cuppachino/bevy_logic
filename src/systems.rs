@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 use bevy_trait_query::One;
 use crate::{
-    components::{ GateFan, Wire },
+    components::{ LogicGateFans, Wire, GateFan, GateInput, GateOutput, NoEvalOutput },
     logic::{ signal::Signal, LogicGate },
-    prelude::{ GateOutput, LogicGateFans },
     resources::LogicGraph,
 };
 
@@ -69,5 +68,28 @@ pub fn step_logic(
                 }
             }
         }
+    }
+}
+
+/// Immediately propagate signals through wires for all [`GateOutput`]s with a [`Signal`] and [`NoEvalOutput`].
+pub fn no_eval_output(
+    query_outputs: Query<
+        (&GateOutput, &Signal),
+        (Changed<Signal>, With<NoEvalOutput>, Without<GateInput>)
+    >,
+    mut query_wires: Query<(&mut Signal, &Wire), (Without<GateInput>, Without<GateOutput>)>,
+    mut query_inputs: Query<&mut Signal, (With<GateInput>, Without<GateOutput>)>
+) {
+    for (outputs, &signal) in query_outputs.iter() {
+        outputs.wires.iter().for_each(|&wire_entity| {
+            let (mut wire_signal, wire) = query_wires
+                .get_mut(wire_entity)
+                .expect("GateOutput stored an entity without a WireBundle");
+            wire_signal.replace(signal);
+
+            if let Ok(mut input_signal) = query_inputs.get_mut(wire.to) {
+                input_signal.replace(signal);
+            }
+        });
     }
 }
