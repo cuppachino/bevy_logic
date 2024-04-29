@@ -1,3 +1,13 @@
+//! This example showcases how one might design "advanced" gates with
+//! functionality beyond what is typically permitted in real life.
+//!
+//! In this example, we design a `Selector` and a `Counter`, and spawn a demo circuit
+//! that works as a permutational keypad. For simplicity, we will ignore incorrect key presses and only
+//! require that the correct keys are pressed in order; however, reset functionality could easily
+//! be implemented with a handful of OR gates.
+//!
+//! The valid code will be `2, 1, 1, 8`, in order.
+
 use bevy::{ ecs::system::EntityCommands, prelude::* };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_logic::{ logic::builder::{ GateData, GateFanEntityMut, Known }, prelude::* };
@@ -207,7 +217,6 @@ fn main() {
         LogicSimulationPlugin,
     ))
         .insert_resource(ClearColor(Color::rgba_linear(0.22, 0.402, 0.598, 1.0)))
-        // .insert_resource(Time::<LogicStep>::from_seconds(1.0 / (TICKS_PER_SECOND as f64)))
         .insert_resource(Time::<LogicStep>::from_hz(TICKS_PER_SECOND))
         .add_systems(Startup, systems::setup_scene)
         .add_systems(Update, gizmo_wires)
@@ -332,10 +341,10 @@ mod systems {
                 commands.spawn_wire(&selector, 3, &and_d, 0).downgrade(), // 3 -> and 0
 
                 // Wire each counter output to an AND gate.
-                commands.spawn_wire(&counter_a, 0, &and_a, 1).downgrade(), // std.in 0 -> and 0
-                commands.spawn_wire(&counter_bc, 0, &and_b, 1).downgrade(), // std.in 0 -> and 0
-                commands.spawn_wire(&counter_bc, 0, &and_c, 1).downgrade(), // std.in 0 -> and 0
-                commands.spawn_wire(&counter_d, 0, &and_d, 1).downgrade(), // std.in 0 -> and 0
+                commands.spawn_wire(&counter_a, 0, &and_a, 1).downgrade(), // out 0 -> and 0
+                commands.spawn_wire(&counter_bc, 0, &and_b, 1).downgrade(), // out 0 -> and 0
+                commands.spawn_wire(&counter_bc, 0, &and_c, 1).downgrade(), // out 0 -> and 0
+                commands.spawn_wire(&counter_d, 0, &and_d, 1).downgrade(), // out 0 -> and 0
 
                 // Wire each and gate to the next selector INPUT except for the last one.
                 commands.spawn_wire(&and_a, 0, &selector, 2).downgrade(), // and a -> selector std.in 1
