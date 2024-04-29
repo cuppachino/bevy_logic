@@ -29,8 +29,9 @@ Add the `LogicSimulationPlugin` to your app, and configure the `Time<LogicStep>`
 to tick at the desired speed.
 
 ```rust
+const STEPS_PER_SECOND: f64 = 30.0;
 app.add_plugins(LogicSimulationPlugin)
-    .insert_resource(Time::<LogicStep>::from_seconds(0.5));
+    .insert_resource(Time::<LogicStep>::from_hz(STEPS_PER_SECOND));
 ```
 
 ### Custom logic gates
@@ -97,4 +98,4 @@ fn spawn_custom_gate(mut commands: Commands, mut sim: ResMut<LogicGraph>) {
 
 | `bevy` | `bevy_logic` |
 | ------ | ------------ |
-| 0.13.2 | 0.3.x        |
+| 0.13.2 | 0.4.x        |
