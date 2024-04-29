@@ -6,7 +6,8 @@ pub mod prelude {
     pub use super::LogicGraph;
 }
 
-/// A resources that stores logic gates' graph.
+/// The logic graph resource determines the order
+/// logic gates are evaluated in.
 #[derive(Resource, Default, Reflect)]
 pub struct LogicGraph {
     #[reflect(ignore)]

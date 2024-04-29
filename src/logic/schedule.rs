@@ -9,8 +9,8 @@ pub mod prelude {
 
 #[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LogicSystemSet {
-    /// Reads [`LogicEvent`] events and updates the [`LogicGraph`] resource.
-    SyncGraph,
+    /// Propagate changed signals that do not require evaluation.
+    PropagateNoEval,
     /// Evaluates the [`LogicGraph`] resource and updates all entities in a single step.
     StepLogic,
 }
@@ -27,14 +27,17 @@ impl Plugin for LogicSchedulePlugin {
     fn build(&self, app: &mut App) {
         app.init_schedule(LogicUpdate).add_systems(FixedMain, run_fixed_main_schedule);
 
-        app.configure_sets(Update, (LogicSystemSet::SyncGraph, LogicSystemSet::StepLogic).chain())
+        app.configure_sets(
+            Update,
+            (LogicSystemSet::PropagateNoEval, LogicSystemSet::StepLogic).chain()
+        )
             .configure_sets(
                 FixedUpdate,
-                (LogicSystemSet::SyncGraph, LogicSystemSet::StepLogic).chain()
+                (LogicSystemSet::PropagateNoEval, LogicSystemSet::StepLogic).chain()
             )
             .configure_sets(
                 LogicUpdate,
-                (LogicSystemSet::SyncGraph, LogicSystemSet::StepLogic).chain()
+                (LogicSystemSet::PropagateNoEval, LogicSystemSet::StepLogic).chain()
             );
     }
 }

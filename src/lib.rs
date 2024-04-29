@@ -29,7 +29,13 @@ impl Plugin for LogicSimulationPlugin {
         app.add_plugins((LogicSchedulePlugin, LogicReflectPlugin, LogicGatePlugin))
             .insert_resource(Time::<LogicStep>::from_seconds(0.5))
             .init_resource::<LogicGraph>()
-            .add_systems(LogicUpdate, systems::step_logic.in_set(LogicSystemSet::StepLogic));
+            .add_systems(
+                LogicUpdate,
+                (
+                    systems::no_eval_output.in_set(LogicSystemSet::PropagateNoEval),
+                    systems::step_logic.in_set(LogicSystemSet::StepLogic),
+                ).chain()
+            );
     }
 }
 

@@ -1,14 +1,17 @@
 use bevy::{ prelude::*, render::{ mesh::PrimitiveTopology, render_asset::RenderAssetUsages } };
-use bevy_logic::{ components::{ GateFan, Wire }, prelude::* };
+use bevy_logic::prelude::*;
 
-use crate::{ triangulation::*, GATE_UNIT_HALF_THICKNESS, GATE_UNIT_SIZE };
+use crate::{ camera_rig::UiWorldPosition, helpers::*, triangulation::* };
 
 pub fn gizmo_wires(
     mut gizmos: Gizmos,
     query_wires: Query<(&Wire, &Signal)>,
-    query_fans: Query<(&GlobalTransform, &Signal), (With<GateFan>, Without<Wire>)>
+    query_fans: Query<
+        (&Signal, &GlobalTransform, Option<&UiWorldPosition>),
+        (With<GateFan>, Without<Wire>)
+    >
 ) {
-    for (gt, signal) in query_fans.iter() {
+    for (signal, gt, maybe_ui_pos) in query_fans.iter() {
         gizmos.circle(gt.translation(), Direction3d::Z, 0.08, if signal.is_truthy() {
             Color::GREEN
         } else {
@@ -17,10 +20,14 @@ pub fn gizmo_wires(
     }
 
     for (wire, signal) in query_wires.iter() {
-        let Ok(from) = query_fans.get(wire.from).map(|(t, _)| t.translation()) else {
+        let Ok(from) = query_fans.get(wire.from).map(|(_, t, maybe_ui_pos)| {
+            if let Some(ui_pos) = maybe_ui_pos { ui_pos.0 } else { t.translation() }
+        }) else {
             continue;
         };
-        let Ok(to) = query_fans.get(wire.to).map(|(t, _)| t.translation()) else {
+        let Ok(to) = query_fans.get(wire.to).map(|(_, t, maybe_ui_pos)| {
+            if let Some(ui_pos) = maybe_ui_pos { ui_pos.0 } else { t.translation() }
+        }) else {
             continue;
         };
 

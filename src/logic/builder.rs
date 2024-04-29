@@ -1,7 +1,9 @@
 use std::marker::PhantomData;
 use bevy::{ ecs::system::EntityCommands, prelude::* };
 use crate::{
-    commands::UpdateOutputWireSet, components::{ GateOutput, InputBundle, LogicGateFans, OutputBundle, Wire }, logic::signal::Signal
+    commands::UpdateOutputWireSet,
+    components::{ GateOutput, InputBundle, LogicGateFans, OutputBundle, Wire, WireBundle },
+    logic::signal::Signal,
 };
 
 /// A builder trait that helps construct logic gate hierarchies and wires.
@@ -9,6 +11,7 @@ pub trait LogicExt {
     type EntityBuilder<'a> where Self: 'a;
     type GateBuilder;
     type WireBuilder;
+    type NoEvalWire;
 
     fn spawn_gate(
         &mut self,
@@ -23,12 +26,17 @@ pub trait LogicExt {
         to_gate: &GateData<Known, O>,
         to_input: usize
     ) -> WireBuilder<'_, Self::WireBuilder>;
+
+    /// Spawn a wire that connects two fans. The output entity **must** have a [`NoEvalOutput`] component
+    /// and not require evaluation or ordering in the [`LogicGraph`] resource.
+    fn spawn_no_eval_wire(&mut self, from_output: Entity, to_input: Entity) -> Entity;
 }
 
 impl LogicExt for World {
     type EntityBuilder<'a> = EntityWorldMut<'a>;
     type GateBuilder = Self;
     type WireBuilder = Self;
+    type NoEvalWire = Entity;
 
     fn spawn_gate(&mut self, bundle: impl Bundle) -> GateBuilder<'_, Self::GateBuilder> {
         let entity = self.spawn(bundle).id();
@@ -82,12 +90,31 @@ impl LogicExt for World {
             },
         }
     }
+
+    fn spawn_no_eval_wire(&mut self, from_output: Entity, to_input: Entity) -> Entity {
+        let wire_entity = self
+            .spawn(WireBundle {
+                wire: Wire {
+                    from: from_output,
+                    to: to_input,
+                },
+                signal: Signal::default(),
+            })
+            .id();
+
+        self.get_mut::<GateOutput>(from_output)
+            .expect("from_output entity does not have GateOutput component")
+            .wires.insert(wire_entity);
+
+        wire_entity
+    }
 }
 
 impl<'w, 's> LogicExt for Commands<'w, 's> {
     type EntityBuilder<'a> = EntityCommands<'a> where Self: 'a;
     type GateBuilder = Self;
     type WireBuilder = Self;
+    type NoEvalWire = Entity;
 
     fn spawn_gate(&mut self, bundle: impl Bundle) -> GateBuilder<'_, Self::GateBuilder> {
         let entity = self.spawn(bundle).id();
@@ -138,6 +165,25 @@ impl<'w, 's> LogicExt for Commands<'w, 's> {
                 to_gate: to_gate.id(),
             },
         }
+    }
+
+    fn spawn_no_eval_wire(&mut self, from_output: Entity, to_input: Entity) -> Entity {
+        let wire_entity = self
+            .spawn(WireBundle {
+                wire: Wire {
+                    from: from_output,
+                    to: to_input,
+                },
+                signal: Signal::default(),
+            })
+            .id();
+
+        self.add(UpdateOutputWireSet::Add {
+            output_entity: from_output,
+            wire_entity,
+        });
+
+        wire_entity
     }
 }
 
@@ -618,5 +664,3 @@ impl<'w, 's> WireBuilder<'_, Commands<'w, 's>> {
         self
     }
 }
-
-

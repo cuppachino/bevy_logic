@@ -136,6 +136,34 @@ pub fn control_camera_rig(
     }
 }
 
+use derive_more::Display;
+
+/// Stores the percieved world position of UI nodes in world space.
+#[derive(Component, Clone, Copy, Debug, Display, Default, Reflect)]
+pub struct UiWorldPosition(pub Vec3);
+
+/// Calculates the world position of UI nodes with a [`UiWorldPosition`] relative to the camera.
+fn calc_ui_world_position(
+    query_camera: Query<(&Camera, &GlobalTransform), With<PrimaryCamera>>,
+    mut query: Query<(&mut UiWorldPosition, &GlobalTransform)>
+) {
+    let (camera, camera_gt) = query_camera.single();
+
+    for (mut ui_pos, ui_gt) in query.iter_mut() {
+        let viewport_position = ui_gt.translation().truncate();
+        let Some(ray) = camera.viewport_to_world(camera_gt, viewport_position) else {
+            continue;
+        };
+
+        // in a real game, you'd use the camera's rot / inverse forward vector to define the Plane3d.
+        let Some(dist) = ray.intersect_plane(Vec3::ZERO, Plane3d { normal: Direction3d::Z }) else {
+            continue;
+        };
+
+        ui_pos.0 = ray.get_point(dist);
+    }
+}
+
 pub struct CameraRigPlugin;
 
 impl Plugin for CameraRigPlugin {
@@ -149,5 +177,7 @@ impl Plugin for CameraRigPlugin {
         app.add_plugins(InputManagerPlugin::<CameraAction>::default())
             .add_systems(Startup, spawn_camera_rig)
             .add_systems(Update, control_camera_rig);
+
+        app.register_type::<UiWorldPosition>().add_systems(Update, calc_ui_world_position);
     }
 }
