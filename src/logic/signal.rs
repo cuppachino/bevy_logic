@@ -110,7 +110,7 @@ impl Signal {
         match (self, other) {
             // Analog cmp Analog
             (Signal::Analog(a), Signal::Analog(b)) => {
-                if a.abs() > b.abs() { Signal::Analog(a) } else { Signal::Analog(b) }
+                if a.abs() >= b.abs() { Signal::Analog(a) } else { Signal::Analog(b) }
             }
             // Analog cmp Digital
             (Signal::Analog(a), Signal::OFF) | (Signal::OFF, Signal::Analog(a)) => {
