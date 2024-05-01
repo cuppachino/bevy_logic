@@ -107,19 +107,21 @@ impl LogicGate for NotGate {
     }
 }
 
-/// An OR gate emits a signal if any input is true.
+/// An OR gate emits the absolute maximum of its input signals.
 ///
 /// - If `invert_output` is true, the gate will be a NOR gate instead.
 /// - If `is_adder` is true, the gate will act as an analog adder.
 ///
 /// ```md
 /// Truth table:
-/// | A | B | Q |
-/// |---|---|---|
-/// | 0 | 0 | 0 |
-/// | 0 | 1 | 1 |
-/// | 1 | 0 | 1 |
-/// | 1 | 1 | 1 |
+/// | A  | B  | Q  |
+/// |----|----|----|
+/// |  0 |  0 |  0 |
+/// |  0 |  1 |  1 |
+/// |  1 |  0 |  1 |
+/// |  1 |  1 |  1 |
+/// | -1 |  1 | -1 |
+/// |  1 | -1 |  1 |
 /// ```
 #[derive(Component, Clone, Copy, Debug, Default, Reflect)]
 pub struct OrGate {
@@ -138,7 +140,7 @@ impl LogicGate for OrGate {
         let signal = if self.is_adder {
             inputs.iter().fold(Signal::OFF, |acc, input| { acc + *input })
         } else {
-            inputs.iter().any(Signal::is_truthy).into()
+            inputs.iter().fold(Signal::OFF, |acc, s| { acc.max_abs(*s) })
         };
 
         let signal = if self.invert_output { !signal } else { signal };
