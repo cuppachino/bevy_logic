@@ -101,6 +101,33 @@ impl Signal {
     pub fn is_undefined(&self) -> bool {
         matches!(self, Self::Undefined)
     }
+
+    /// Compare two signals and return the signal with a greater
+    /// absolute value.
+    ///
+    /// This is useful when negative signals should hold the same weight as positive signals.
+    pub fn max_abs(self, other: Signal) -> Signal {
+        match (self, other) {
+            // Analog cmp Analog
+            (Signal::Analog(a), Signal::Analog(b)) => {
+                if a.abs() >= b.abs() { Signal::Analog(a) } else { Signal::Analog(b) }
+            }
+            // Analog cmp Digital
+            (Signal::Analog(a), Signal::OFF) | (Signal::OFF, Signal::Analog(a)) => {
+                if a.is_normal() { Signal::Analog(a) } else { Signal::OFF }
+            }
+            (Signal::Analog(a), Signal::ON) | (Signal::ON, Signal::Analog(a)) => {
+                if a.abs() >= 1.0 { Signal::Analog(a) } else { Signal::ON }
+            }
+            // Digital cmp Digital
+            (Signal::OFF, Signal::OFF) => Signal::OFF,
+            (Signal::ON, Signal::ON) | (Signal::ON, Signal::OFF) | (Signal::OFF, Signal::ON) => {
+                Signal::ON
+            }
+            // Undefined
+            (Signal::Undefined, v) | (v, Signal::Undefined) => v,
+        }
+    }
 }
 
 impl std::ops::Add for Signal {

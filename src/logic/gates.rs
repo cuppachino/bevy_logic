@@ -69,6 +69,8 @@ impl LogicGate for Battery {
 
 /// An AND gate emits a signal if all inputs are true.
 ///
+/// - If `invert_output` is true, the gate act as a NAND gate instead.
+///
 /// ```md
 /// Truth table:
 /// | A | B | Q |
@@ -78,12 +80,19 @@ impl LogicGate for Battery {
 /// | 1 | 0 | 0 |
 /// | 1 | 1 | 1 |
 /// ```
-#[derive(Component, Clone, Copy, Debug, Reflect)]
-pub struct AndGate;
+#[derive(Component, Clone, Copy, Debug, Default, Reflect)]
+pub struct AndGate {
+    pub invert_output: bool,
+}
+
+impl AndGate {
+    pub const NAND: AndGate = AndGate { invert_output: true };
+}
 
 impl LogicGate for AndGate {
     fn evaluate(&mut self, inputs: &[Signal], outputs: &mut [Signal]) {
         let signal: Signal = inputs.iter().all(Signal::is_truthy).into();
+        let signal = if self.invert_output { !signal } else { signal };
         outputs.set_all(signal);
     }
 }
@@ -97,7 +106,7 @@ impl LogicGate for AndGate {
 /// | 0 | 1 |
 /// | 1 | 0 |
 /// ```
-#[derive(Component, Clone, Copy, Debug, Reflect)]
+#[derive(Component, Clone, Copy, Debug, Default, Reflect)]
 pub struct NotGate;
 
 impl LogicGate for NotGate {
@@ -107,19 +116,21 @@ impl LogicGate for NotGate {
     }
 }
 
-/// An OR gate emits a signal if any input is true.
+/// An OR gate emits the absolute maximum of its input signals.
 ///
 /// - If `invert_output` is true, the gate will be a NOR gate instead.
 /// - If `is_adder` is true, the gate will act as an analog adder.
 ///
 /// ```md
 /// Truth table:
-/// | A | B | Q |
-/// |---|---|---|
-/// | 0 | 0 | 0 |
-/// | 0 | 1 | 1 |
-/// | 1 | 0 | 1 |
-/// | 1 | 1 | 1 |
+/// | A  | B  | Q  |
+/// |----|----|----|
+/// |  0 |  0 |  0 |
+/// |  0 |  1 |  1 |
+/// |  1 |  0 |  1 |
+/// |  1 |  1 |  1 |
+/// | -1 |  1 | -1 |
+/// |  1 | -1 |  1 |
 /// ```
 #[derive(Component, Clone, Copy, Debug, Default, Reflect)]
 pub struct OrGate {
@@ -138,7 +149,7 @@ impl LogicGate for OrGate {
         let signal = if self.is_adder {
             inputs.iter().fold(Signal::OFF, |acc, input| { acc + *input })
         } else {
-            inputs.iter().any(Signal::is_truthy).into()
+            inputs.iter().fold(Signal::OFF, |acc, s| { acc.max_abs(*s) })
         };
 
         let signal = if self.invert_output { !signal } else { signal };
