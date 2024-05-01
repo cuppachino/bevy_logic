@@ -556,7 +556,7 @@ mod helpers {
         commands
             .spawn_gate((
                 Name::new("AND"),
-                AndGate,
+                AndGate::default(),
                 pbr(position.extend(0.0), meshes.add(build_mesh(inputs, 1, 0)), materials),
             ))
             .build_inputs(inputs, fan_entity_mut(GateFan::Input, inputs))

@@ -53,13 +53,13 @@ fn setup(world: &mut World) {
         .insert_bundle(not_bundle_b)
         .build();
     let and_gate_a = world
-        .spawn_gate((Name::new("AND"), AndGate))
+        .spawn_gate((Name::new("AND"), AndGate::default()))
         .build_inputs(2, gate_fan(GateFan::Input, 2, 1.0))
         .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
         .insert_bundle(and_bundle_a.clone())
         .build();
     let and_gate_b = world
-        .spawn_gate((Name::new("AND"), AndGate))
+        .spawn_gate((Name::new("AND"), AndGate::default()))
         .build_inputs(2, gate_fan(GateFan::Input, 2, 1.0))
         .build_outputs(1, gate_fan(GateFan::Output, 1, 1.0))
         .insert_bundle(and_bundle_b)
