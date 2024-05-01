@@ -11,7 +11,7 @@ pub fn gizmo_wires(
         (With<GateFan>, Without<Wire>)
     >
 ) {
-    for (signal, gt, maybe_ui_pos) in query_fans.iter() {
+    for (signal, gt, _) in query_fans.iter() {
         gizmos.circle(gt.translation(), Direction3d::Z, 0.08, if signal.is_truthy() {
             Color::GREEN
         } else {
