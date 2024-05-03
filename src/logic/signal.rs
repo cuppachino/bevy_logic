@@ -20,7 +20,15 @@ impl Signal {
     pub const ON: Signal = Signal::Digital(true);
     pub const NEG: Signal = Signal::Analog(-1.0);
 
-    /// Returns true if the signal is true or greater or equal to 1.0.
+    /// Returns `true` if the signal is `Digital(true)` or `Analog(_normal_float_)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// assert!(Signal::ON.is_truthy());
+    /// assert!(Signal::Analog(0.1).is_truthy());
+    /// assert!(Signal::Analog(-0.1).is_truthy());
+    /// ```
     pub fn is_truthy(&self) -> bool {
         match self {
             Signal::Digital(true) => true,
@@ -29,7 +37,16 @@ impl Signal {
         }
     }
 
-    /// Returns true if the signal is false, less than 1.0, or undefined.
+    /// Returns true if the signal is `Digital(false) or Analog(_non_normal_float_)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// assert!(Signal::OFF.is_falsy());
+    /// assert!(Signal::Analog(0.0).is_falsy());
+    /// assert!(Signal::Analog(f32::NAN).is_falsy());
+    /// assert!(Signal::Undefined.is_falsy());
+    /// ```
     pub fn is_falsy(&self) -> bool {
         match self {
             Signal::Digital(true) => false,

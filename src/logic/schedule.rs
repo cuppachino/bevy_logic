@@ -7,6 +7,9 @@ pub mod prelude {
     pub use super::LogicSystemSet;
 }
 
+/// Stages of the logic simulation. You can order systems during or around these stages.
+///
+/// Configured order: `PropagateNoEval` -> `StepLogic`
 #[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LogicSystemSet {
     /// Propagate changed signals that do not require evaluation.
@@ -15,7 +18,7 @@ pub enum LogicSystemSet {
     StepLogic,
 }
 
-/// A plugin that initializes the [`LogicUpdate`] schedule for a given [`App`].
+/// A plugin that initializes the [`LogicUpdate`] schedule for an [`App`].
 ///
 /// This works just like bevy's [`FixedUpdate`] schedule. The speed of the simulation
 /// can be controlled by inserting a [`Time<LogicStep>`] resource.

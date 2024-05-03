@@ -13,6 +13,7 @@ pub trait LogicExt {
     type WireBuilder;
     type NoEvalWire;
 
+    /// Spawn a new entity with `bundle` and return a [`GateBuilder`] for further construction.
     fn spawn_gate(
         &mut self,
         bundle: impl Bundle
