@@ -23,12 +23,15 @@ pub enum LogicSystemSet {
 /// This works just like bevy's [`FixedUpdate`] schedule. The speed of the simulation
 /// can be controlled by inserting a [`Time<LogicStep>`] resource.
 ///
-/// See [`FixedMain`] for more information.
+/// See [`FixedMain`] and [`bevy::app::RunFixedMainLoop`] for more information.
 pub struct LogicSchedulePlugin;
 
 impl Plugin for LogicSchedulePlugin {
     fn build(&self, app: &mut App) {
-        app.init_schedule(LogicUpdate).add_systems(FixedMain, run_fixed_main_schedule);
+        app.init_schedule(LogicUpdate).add_systems(
+            bevy::app::RunFixedMainLoop,
+            run_fixed_main_schedule
+        );
 
         app.configure_sets(
             Update,
