@@ -18,6 +18,7 @@ fn main() {
     app.add_plugins((DefaultPlugins, WorldInspectorPlugin::new(), CameraRigPlugin, VisualPlugin))
         .insert_resource(ClearColor(Color::rgba_linear(0.22, 0.402, 0.598, 1.0)))
         .add_plugins(LogicSimulationPlugin::default())
+        .insert_resource(Time::<Fixed>::from_seconds(1.0)) // Just to demonstrate Fixed steps independent of LogicStep.
         .add_systems(Startup, setup)
         .run();
 }

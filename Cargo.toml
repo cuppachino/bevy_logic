@@ -1,7 +1,7 @@
 [package]
 name = "bevy_logic"
 description = "A logic gate simulation plugin for Bevy."
-version = "0.5.1"
+version = "0.6.0"
 authors = ["Jacob Bergholtz"]
 homepage = "https://github.com/cuppachino/bevy_logic"
 repository = "https://github.com/cuppachino/bevy_logic"
@@ -23,7 +23,6 @@ derive_more = "0.99.17"
 [dev-dependencies]
 bevy = "0.13.2"
 bevy-inspector-egui = "0.24"
-bevy_mod_picking = "0.18.2"
 leafwing-input-manager = "0.13.3"
 itertools = "0.12.1"
 i_float = "0.10.0"
