@@ -1,4 +1,4 @@
-use bevy::{ prelude::*, utils::HashMap };
+use bevy::{ color::palettes, prelude::*, utils::HashMap };
 use bevy_logic::{ components::{ GateFan, GateOutput, LogicGateFans, Wire }, logic::signal::Signal };
 
 pub struct VisualPlugin;
@@ -67,7 +67,7 @@ fn colorize_logic_gates(
                 signal.is_truthy()
             });
 
-        let color = if is_active { Color::WHITE } else { Color::GRAY };
+        let color = if is_active { Color::WHITE } else { palettes::basic::GRAY.into() };
 
         let material = materials.get_mut(material).unwrap();
         material.base_color = color;
@@ -87,10 +87,10 @@ fn gizmo_wires(
             continue;
         };
 
-        let color = if signal.is_truthy() { Color::GREEN } else { Color::BLACK };
+        let color = if signal.is_truthy() { palettes::basic::GREEN.into() } else { Color::BLACK };
 
         gizmos.line(from, to, color);
-        gizmos.circle(from, Direction3d::Z, 0.1, color);
-        gizmos.circle(to, Direction3d::Z, 0.1, color);
+        gizmos.circle(from, Dir3::Z, 0.1, color);
+        gizmos.circle(to, Dir3::Z, 0.1, color);
     }
 }

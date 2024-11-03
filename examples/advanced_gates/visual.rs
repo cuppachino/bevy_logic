@@ -1,4 +1,8 @@
-use bevy::{ prelude::*, render::{ mesh::PrimitiveTopology, render_asset::RenderAssetUsages } };
+use bevy::{
+    color::palettes,
+    prelude::*,
+    render::{ mesh::PrimitiveTopology, render_asset::RenderAssetUsages },
+};
 use bevy_logic::prelude::*;
 
 use crate::{ camera_rig::UiWorldPosition, helpers::*, triangulation::* };
@@ -12,10 +16,10 @@ pub fn gizmo_wires(
     >
 ) {
     for (signal, gt, _) in query_fans.iter() {
-        gizmos.circle(gt.translation(), Direction3d::Z, 0.08, if signal.is_truthy() {
-            Color::GREEN
+        gizmos.circle(gt.translation(), Dir3::Z, 0.08, if signal.is_truthy() {
+            Color::from(palettes::basic::GREEN)
         } else {
-            Color::GRAY
+            palettes::basic::GRAY.into()
         });
     }
 
@@ -32,9 +36,9 @@ pub fn gizmo_wires(
         };
 
         let color = if signal.is_truthy() {
-            (Color::GREEN, Color::DARK_GREEN)
+            (palettes::basic::GREEN.into(), palettes::css::DARK_GREEN.into())
         } else {
-            (Color::GRAY, Color::BLACK)
+            (palettes::basic::GRAY.into(), Color::BLACK)
         };
 
         gizmos.line_gradient(from, to, color.0, color.1);

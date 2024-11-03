@@ -1,5 +1,4 @@
 use bevy::{ ecs::entity::EntityHashSet, prelude::* };
-use derive_new::new;
 
 use crate::logic::signal::Signal;
 
@@ -19,12 +18,19 @@ pub mod prelude {
 
 /// A component that connects two logic gates with the entity IDs
 /// of their child fans.
-#[derive(new, Component, Clone, Copy, Debug, Reflect)]
+#[derive(Component, Clone, Copy, Debug, Reflect)]
 pub struct Wire {
     /// The [`GateOutput`] entity.
     pub from: Entity,
     /// The [`GateInput`] entity.
     pub to: Entity,
+}
+
+impl Wire {
+    /// Create a new wire from an `Entity` with a [`GateOutput`] to an `Entity` with a [`GateInput`].
+    pub fn new(from: Entity, to: Entity) -> Self {
+        Self { from, to }
+    }
 }
 
 /// A bundle used to create a wire between a [`GateOutput`] and [`GateInput`].
