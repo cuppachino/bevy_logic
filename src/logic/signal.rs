@@ -1,12 +1,33 @@
 use bevy::prelude::*;
-use derive_more::{ From, Display };
 
 /// State storage for logic simulation.
-#[derive(Component, Clone, Copy, Debug, Display, PartialEq, PartialOrd, From, Reflect)]
+#[derive(Component, Clone, Copy, Debug, PartialEq, PartialOrd, Reflect)]
 pub enum Signal {
     Analog(f32),
     Digital(bool),
     Undefined,
+}
+
+impl std::fmt::Display for Signal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Signal::Analog(value) => write!(f, "{:.2}", value),
+            Signal::Digital(value) => write!(f, "{}", value),
+            Signal::Undefined => write!(f, "Undefined"),
+        }
+    }
+}
+
+impl From<f32> for Signal {
+    fn from(value: f32) -> Self {
+        Signal::Analog(value)
+    }
+}
+
+impl From<bool> for Signal {
+    fn from(value: bool) -> Self {
+        Signal::Digital(value)
+    }
 }
 
 impl Default for Signal {

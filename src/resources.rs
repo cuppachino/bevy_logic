@@ -1,4 +1,5 @@
-use bevy::{ prelude::*, utils::petgraph::{ algo::kosaraju_scc, graphmap::DiGraphMap } };
+use bevy::prelude::*;
+use petgraph::{ algo::kosaraju_scc, graphmap::DiGraphMap };
 
 use crate::{ components::Wire, logic::builder::{ GateData, WireData } };
 
@@ -62,14 +63,14 @@ impl LogicGraph {
     /// The tuple represents `(wire_entity, Wire { from, to })`.
     pub fn iter_incoming_wires(&self, gate: Entity) -> impl Iterator<Item = (Entity, Wire)> + '_ {
         self.graph
-            .edges_directed(gate, bevy::utils::petgraph::Direction::Incoming)
+            .edges_directed(gate, petgraph::Direction::Incoming)
             .map(|(from, to, wire)| (*wire, Wire { from, to }))
     }
 
     /// Returns an iterator over all outgoing wires from a gate.
     pub fn iter_outgoing_wires(&self, gate: Entity) -> impl Iterator<Item = (Entity, Wire)> + '_ {
         self.graph
-            .edges_directed(gate, bevy::utils::petgraph::Direction::Outgoing)
+            .edges_directed(gate, petgraph::Direction::Outgoing)
             .map(|(from, to, wire)| (*wire, Wire { from, to }))
     }
 

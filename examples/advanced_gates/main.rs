@@ -78,7 +78,6 @@ mod custom_gates {
                             .replace(*signal);
                     }
                 } else {
-                    // self.last_input.replace(index);
                     outputs.set_all(Signal::OFF);
                     outputs
                         .get_mut(index - 1)
@@ -216,7 +215,7 @@ fn main() {
         WorldInspectorPlugin::new(),
         LogicSimulationPlugin,
     ))
-        .insert_resource(ClearColor(Color::rgba_linear(0.22, 0.402, 0.598, 1.0)))
+        .insert_resource(ClearColor(Color::linear_rgba(0.22, 0.402, 0.598, 1.0)))
         .insert_resource(Time::<LogicStep>::from_hz(TICKS_PER_SECOND))
         .add_systems(Startup, systems::setup_scene)
         .add_systems(Update, gizmo_wires)
@@ -232,6 +231,8 @@ fn main() {
 }
 
 mod systems {
+    use bevy::color::palettes;
+
     use super::*;
 
     /// Scene setup.
@@ -331,7 +332,7 @@ mod systems {
                 OutputBundle::default(),
                 NoEvalOutput,
                 ButtonBundle {
-                    background_color: Color::GRAY.into(),
+                    background_color: palettes::basic::GRAY.into(),
                     style: Style {
                         position_type: PositionType::Absolute,
                         left: Val::Px(20.0),
@@ -374,10 +375,10 @@ mod systems {
                 commands.spawn_wire(&selector, 3, &and_d, 0).downgrade(), // 3 -> and 0
 
                 // Wire each counter output to an AND gate.
-                commands.spawn_wire(&counter_a, 0, &and_a, 1).downgrade(), // out 0 -> and 0
-                commands.spawn_wire(&counter_bc, 0, &and_b, 1).downgrade(), // out 0 -> and 0
-                commands.spawn_wire(&counter_bc, 0, &and_c, 1).downgrade(), // out 0 -> and 0
-                commands.spawn_wire(&counter_d, 0, &and_d, 1).downgrade(), // out 0 -> and 0
+                commands.spawn_wire(&counter_a, 0, &and_a, 1).downgrade(), // out 0 -> and 1
+                commands.spawn_wire(&counter_bc, 0, &and_b, 1).downgrade(), // out 0 -> and 1
+                commands.spawn_wire(&counter_bc, 0, &and_c, 1).downgrade(), // out 0 -> and 1
+                commands.spawn_wire(&counter_d, 0, &and_d, 1).downgrade(), // out 0 -> and 1
 
                 // Wire each and gate to the next selector INPUT except for the last one.
                 commands.spawn_wire(&and_a, 0, &selector, 2).downgrade(), // and a -> selector std.in 1
@@ -403,17 +404,17 @@ mod systems {
         for (interaction, mut color, mut signal) in &mut query_buttons {
             match *interaction {
                 Interaction::Pressed => {
-                    *color = Color::GREEN.into();
+                    *color = palettes::basic::GREEN.into();
                     *signal = Signal::ON;
                 }
                 Interaction::Hovered => {
                     if signal.is_falsy() {
-                        *color = Color::DARK_GRAY.into();
+                        *color = palettes::css::DARK_GRAY.into();
                     }
                 }
                 Interaction::None => {
                     if signal.is_falsy() {
-                        *color = Color::GRAY.into();
+                        *color = palettes::basic::GRAY.into();
                     }
                 }
             }
@@ -430,15 +431,15 @@ mod systems {
         for (interaction, mut color, mut signal) in &mut query_buttons {
             match *interaction {
                 Interaction::Pressed => {
-                    *color = Color::GREEN.into();
+                    *color = palettes::basic::GREEN.into();
                     *signal = Signal::ON;
                 }
                 Interaction::Hovered => {
-                    *color = Color::DARK_GRAY.into();
+                    *color = palettes::css::DARK_GRAY.into();
                     *signal = Signal::OFF;
                 }
                 Interaction::None => {
-                    *color = Color::GRAY.into();
+                    *color = palettes::basic::GRAY.into();
                     *signal = Signal::OFF;
                 }
             }
@@ -477,7 +478,7 @@ mod helpers {
                             OutputBundle::default(),
                             NoEvalOutput,
                             ButtonBundle {
-                                background_color: Color::GRAY.into(),
+                                background_color: bevy::color::palettes::basic::GRAY.into(),
                                 style: Style {
                                     aspect_ratio: Some(1.0),
                                     height: Val::Percent(100.0),

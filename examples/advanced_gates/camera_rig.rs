@@ -136,10 +136,8 @@ pub fn control_camera_rig(
     }
 }
 
-use derive_more::Display;
-
 /// Stores the percieved world position of UI nodes in world space.
-#[derive(Component, Clone, Copy, Debug, Display, Default, Reflect)]
+#[derive(Component, Clone, Copy, Debug, Default, Reflect)]
 pub struct UiWorldPosition(pub Vec3);
 
 /// Calculates the world position of UI nodes with a [`UiWorldPosition`] relative to the camera.
@@ -156,7 +154,9 @@ fn calc_ui_world_position(
         };
 
         // in a real game, you'd use the camera's rot / inverse forward vector to define the Plane3d.
-        let Some(dist) = ray.intersect_plane(Vec3::ZERO, Plane3d { normal: Direction3d::Z }) else {
+        let Some(dist) = ray.intersect_plane(Vec3::ZERO, InfinitePlane3d {
+            normal: Dir3::Z,
+        }) else {
             continue;
         };
 
